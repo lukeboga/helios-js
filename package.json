@@ -1,0 +1,32 @@
+{
+  "name": "helios-js",
+  "version": "0.0.1-alpha",
+  "description": "Light and limited natural language parser for recurring dates",
+  "author": "",
+  "license": "MIT",
+  "main": "out/nl-rrule.cjs.js",
+  "module": "out/nl-rrule.es.js",
+  "types": "out/index.d.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest",
+    "simple-test": "npm run build && node -r esbuild-register test/simple-test.ts"
+  },
+  "keywords": [
+    "rrule",
+    "recurrence",
+    "natural-language"
+  ],
+  "dependencies": {
+    "rrule": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.13",
+    "@types/rrule": "^2.1.7",
+    "esbuild-register": "^3.6.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.3",
+    "vitest": "^3.0.9"
+  }
+}
