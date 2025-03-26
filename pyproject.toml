@@ -1,0 +1,7 @@
+[project]
+name = "helios-js"
+version = "0.0.1"
+description = "HeliosJS"
+readme = "README.md"
+requires-python = ">=3.12.8"
+dependencies = []

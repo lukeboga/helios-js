@@ -9,8 +9,10 @@
  * and provide a foundation for future pattern categories.
  */
 
-import { RRule, Frequency } from 'rrule';
-import { DayMapping, FrequencyMapping, } from '../types';
+import { RRule } from 'rrule';
+import type { Frequency } from 'rrule';
+import type { DayMapping, FrequencyMapping } from '../types';
+import { DAYS, TIME_UNITS } from '../constants';
 
 /**
  * Maps day names (and abbreviations) to RRule day constants.
@@ -21,22 +23,22 @@ import { DayMapping, FrequencyMapping, } from '../types';
  */
 export const DAY_MAP: DayMapping = {
   // Full day names
-  'monday': RRule.MO,
-  'tuesday': RRule.TU,
-  'wednesday': RRule.WE,
-  'thursday': RRule.TH,
-  'friday': RRule.FR,
-  'saturday': RRule.SA,
-  'sunday': RRule.SU,
+  [DAYS.MONDAY]: RRule.MO,
+  [DAYS.TUESDAY]: RRule.TU,
+  [DAYS.WEDNESDAY]: RRule.WE,
+  [DAYS.THURSDAY]: RRule.TH,
+  [DAYS.FRIDAY]: RRule.FR,
+  [DAYS.SATURDAY]: RRule.SA,
+  [DAYS.SUNDAY]: RRule.SU,
 
   // Common abbreviations
-  'mon': RRule.MO,
-  'tue': RRule.TU,
-  'wed': RRule.WE,
-  'thu': RRule.TH,
-  'fri': RRule.FR,
-  'sat': RRule.SA,
-  'sun': RRule.SU
+  [DAYS.MON]: RRule.MO,
+  [DAYS.TUE]: RRule.TU,
+  [DAYS.WED]: RRule.WE,
+  [DAYS.THU]: RRule.TH,
+  [DAYS.FRI]: RRule.FR,
+  [DAYS.SAT]: RRule.SA,
+  [DAYS.SUN]: RRule.SU
 };
 
 /**
@@ -45,10 +47,10 @@ export const DAY_MAP: DayMapping = {
  * their corresponding RRule frequency constants.
  */
 export const FREQUENCY_MAP: FrequencyMapping = {
-  'day': RRule.DAILY,
-  'week': RRule.WEEKLY,
-  'month': RRule.MONTHLY,
-  'year': RRule.YEARLY
+  [TIME_UNITS.DAY]: RRule.DAILY,
+  [TIME_UNITS.WEEK]: RRule.WEEKLY,
+  [TIME_UNITS.MONTH]: RRule.MONTHLY,
+  [TIME_UNITS.YEAR]: RRule.YEARLY
 };
 
 /**
@@ -106,7 +108,7 @@ export function isValidDayName(day: string): boolean {
  * dayNameToRRuleDay('monday') // returns RRule.MO
  * dayNameToRRuleDay('MON') // returns RRule.MO
  */
-export function dayNameToRRuleDay(day: string): number {
+export function dayNameToRRuleDay(day: string): RRule.Weekday {
   const normalizedDay = day.toLowerCase();
   if (isValidDayName(normalizedDay)) {
     return DAY_MAP[normalizedDay];
@@ -159,7 +161,7 @@ export function timeUnitToFrequency(unit: string): Frequency {
  * @example
  * extractDayNames('every monday and wednesday') // returns [RRule.MO, RRule.WE]
  */
-export function extractDayNames(input: string): number[] {
+export function extractDayNames(input: string): RRule.Weekday[] {
   const dayPattern = new RegExp(DAY_NAME_PATTERN, 'gi');
   const matches = input.match(dayPattern) || [];
 
