@@ -8,7 +8,7 @@
  * These types provide a foundation for type safety across the codebase and
  * include extension points for future pattern categories.
  */
-import type { RRule, Frequency, Weekday, Options as RRuleOptions } from 'rrule';
+import { RRule, Frequency, Weekday, Options as RRuleOptions } from 'rrule';
 import type { DayString, TimeUnitString } from './constants';
 
 /**
