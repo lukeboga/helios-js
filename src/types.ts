@@ -52,7 +52,7 @@ export interface RecurrenceOptions {
   interval: number;
 
   // Day of week specification (currently implemented)
-  byweekday: Weekday[] | null;
+  byweekday: RRule.Weekday[] | null;
 
   // Day of month specification (future extension)
   bymonthday: number[] | null;
