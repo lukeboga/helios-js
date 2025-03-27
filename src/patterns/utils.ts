@@ -13,6 +13,7 @@ import { RRule } from 'rrule';
 import type { Frequency } from 'rrule';
 import type { DayMapping, FrequencyMapping } from '../types';
 import { DAYS, TIME_UNITS } from '../constants';
+import type { DayString, TimeUnitString } from '../constants';
 
 /**
  * Maps day names (and abbreviations) to RRule day constants.
@@ -111,7 +112,8 @@ export function isValidDayName(day: string): boolean {
 export function dayNameToRRuleDay(day: string): RRule.Weekday {
   const normalizedDay = day.toLowerCase();
   if (isValidDayName(normalizedDay)) {
-    return DAY_MAP[normalizedDay];
+    // Use type assertion since we've already verified this is a valid day name key
+    return DAY_MAP[normalizedDay as DayString];
   }
   throw new Error(`Invalid day name: ${day}`);
 }
@@ -147,7 +149,8 @@ export function timeUnitToFrequency(unit: string): Frequency {
   // Remove trailing 's' if present (to handle plural forms)
   const singularUnit = unit.toLowerCase().replace(/s$/, '');
   if (isValidTimeUnit(singularUnit)) {
-    return FREQUENCY_MAP[singularUnit];
+    // Use type assertion since we've already verified this is a valid time unit key
+    return FREQUENCY_MAP[singularUnit as TimeUnitString];
   }
   throw new Error(`Invalid time unit: ${unit}`);
 }
