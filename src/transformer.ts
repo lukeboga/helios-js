@@ -17,6 +17,7 @@ import type { Options as RRuleOptions } from 'rrule';
 import type { RecurrenceOptions, TransformerConfig, TransformationResult } from './types';
 import { normalizeInput } from './normalizer';
 import { patternHandlers } from './patterns';
+import { asWeekdays } from './utils';
 
 /**
  * Default configuration for the transformer
@@ -138,8 +139,8 @@ function cleanOptions(options: RecurrenceOptions): TransformationResult {
   }
 
   if (Array.isArray(options.byweekday) && options.byweekday.length > 0) {
-    // The byweekday property in RRule can accept the day constants directly
-    result.byweekday = options.byweekday;
+    // Use the utility function to handle the type conversion
+    result.byweekday = asWeekdays(options.byweekday);
   }
 
   if (Array.isArray(options.bymonthday) && options.bymonthday.length > 0) {

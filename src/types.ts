@@ -8,7 +8,9 @@
  * These types provide a foundation for type safety across the codebase and
  * include extension points for future pattern categories.
  */
-import { RRule, Frequency, Weekday, Options as RRuleOptions } from 'rrule';
+
+import { Options as RRuleOptions } from 'rrule';
+import type { Frequency, Weekday } from 'rrule';
 import type { DayString, TimeUnitString } from './constants';
 
 /**
@@ -52,7 +54,7 @@ export interface RecurrenceOptions {
   interval: number;
 
   // Day of week specification (currently implemented)
-  byweekday: RRule.Weekday[] | null;
+  byweekday: Weekday[] | null;
 
   // Day of month specification (future extension)
   bymonthday: number[] | null;
@@ -74,7 +76,7 @@ export interface RecurrenceOptions {
  * Used for converting natural language day names to their corresponding
  * RRule constants.
  */
-export type DayMapping = Record<DayString, RRule.Weekday>;
+export type DayMapping = Record<DayString, Weekday>;
 
 /**
  * Mapping from time unit strings to RRule frequency constants.
