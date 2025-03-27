@@ -1,12 +1,12 @@
 /**
  * Frequency Pattern Module
  * 
- * This module handles basic frequency recognition in natural language recurrence patterns.
- * It identifies simple frequency terms like "daily", "weekly", "monthly", "yearly",
- * as well as special cases like "weekday" and "weekend".
+ * This module handles frequency recognition in natural language recurrence patterns.
+ * It matches patterns like "daily", "weekly", "monthly", "yearly" and their variants,
+ * setting the appropriate frequency in the options object.
  * 
- * The frequency pattern is typically the most fundamental aspect of a recurrence rule,
- * establishing the base period for the recurrence.
+ * Frequency patterns are typically processed early in the pipeline as they establish
+ * the fundamental recurrence type.
  */
 
 import { RRule } from 'rrule';
@@ -103,6 +103,7 @@ export function applyFrequencyRules(input: string, options: RecurrenceOptions): 
   // Special case: Weekdays (Monday-Friday)
   if (new RegExp(`\\b${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.WEEKDAY}\\b`).test(input)) {
     options.freq = RRule.WEEKLY;
+    // WEEKDAYS is of type RRule.Weekday[], which matches our RecurrenceOptions.byweekday type
     options.byweekday = WEEKDAYS;
     return;
   }
@@ -110,6 +111,7 @@ export function applyFrequencyRules(input: string, options: RecurrenceOptions): 
   // Special case: Weekend days (Saturday-Sunday)
   if (new RegExp(`\\b${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.WEEKEND}\\b`).test(input)) {
     options.freq = RRule.WEEKLY;
+    // WEEKEND_DAYS is of type RRule.Weekday[], which matches our RecurrenceOptions.byweekday type
     options.byweekday = WEEKEND_DAYS;
     return;
   }

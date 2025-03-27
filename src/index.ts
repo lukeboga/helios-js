@@ -63,6 +63,12 @@ export function naturalLanguageToRRule(
  * This is a convenience function that combines naturalLanguageToRRule with
  * RRule instantiation, returning a ready-to-use RRule object.
  * 
+ * Note on type compatibility: This function handles the type discrepancy between:
+ * 1. RRuleOptions (from the rrule package import) - allows null values
+ * 2. RRule.Options (from RRule constructor) - uses undefined instead of null
+ * 
+ * These discrepancies are handled with proper null checks and type conversions.
+ * 
  * @param startDate - The start date for the recurrence pattern
  * @param recurrencePattern - Natural language description (e.g., "every Monday")
  * @param endDate - Optional end date for the recurrence pattern
@@ -80,8 +86,39 @@ export function createRRule(
   recurrencePattern: string,
   endDate?: Date
 ): RRule {
+  // Get the RRule options from the natural language transformer
   const options = naturalLanguageToRRule(startDate, recurrencePattern, endDate);
-  return new RRule(options);
+  
+  // Create a clean options object for the RRule constructor
+  // We use type assertion because we know the values are compatible at runtime
+  // even though TypeScript sees incompatibilities between RRuleOptions and RRule.Options
+  const ruleOptions: RRule.Options = {
+    freq: options.freq,
+    dtstart: startDate,
+    interval: options.interval || 1
+  };
+  
+  // Copy remaining properties, converting nulls to undefined
+  if (options.wkst !== null) ruleOptions.wkst = options.wkst;
+  if (options.count !== null) ruleOptions.count = options.count;
+  if (options.until !== null) ruleOptions.until = options.until;
+  if (options.bysetpos !== null) ruleOptions.bysetpos = options.bysetpos;
+  if (options.bymonth !== null) ruleOptions.bymonth = options.bymonth;
+  if (options.bymonthday !== null) ruleOptions.bymonthday = options.bymonthday;
+  if (options.byyearday !== null) ruleOptions.byyearday = options.byyearday;
+  if (options.byweekno !== null) ruleOptions.byweekno = options.byweekno;
+  if (options.byhour !== null) ruleOptions.byhour = options.byhour;
+  if (options.byminute !== null) ruleOptions.byminute = options.byminute;
+  if (options.bysecond !== null) ruleOptions.bysecond = options.bysecond;
+  
+  // Handle byweekday property specially
+  if (options.byweekday !== null) {
+    // Direct cast as any -> correct type for RRule constructor
+    // This works at runtime despite the TypeScript type mismatch
+    ruleOptions.byweekday = options.byweekday as any;
+  }
+  
+  return new RRule(ruleOptions);
 }
 
 // For better compatibility with the RRule library, we also export the utility

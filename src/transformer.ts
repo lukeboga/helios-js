@@ -139,7 +139,8 @@ function cleanOptions(options: RecurrenceOptions): TransformationResult {
   }
 
   if (Array.isArray(options.byweekday) && options.byweekday.length > 0) {
-    // Use the utility function to handle the type conversion
+    // Convert from internal RRule.Weekday[] to the Weekday[] type expected by RRule options
+    // This is critical for type compatibility between our internal representation and RRule's API
     result.byweekday = asWeekdays(options.byweekday);
   }
 

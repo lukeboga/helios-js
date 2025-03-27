@@ -9,8 +9,9 @@
  * include extension points for future pattern categories.
  */
 
-import { Options as RRuleOptions } from 'rrule';
-import type { Frequency, Weekday } from 'rrule';
+import { RRule } from 'rrule';
+import type { Options as RRuleOptions } from 'rrule';
+import type { Frequency } from 'rrule';
 import type { DayString, TimeUnitString } from './constants';
 
 /**
@@ -47,6 +48,9 @@ export interface PatternHandler {
  * 
  * This interface extends beyond current functionality to include placeholder
  * properties for future pattern categories, ensuring forward compatibility.
+ * 
+ * Note: We use RRule.Weekday for internal representation (from RRule.MO constants) while
+ * the final output to RRule constructor uses the imported Weekday type through conversion.
  */
 export interface RecurrenceOptions {
   // Basic frequency and interval (currently implemented)
@@ -54,7 +58,8 @@ export interface RecurrenceOptions {
   interval: number;
 
   // Day of week specification (currently implemented)
-  byweekday: Weekday[] | null;
+  // We use RRule.Weekday internally from RRule.MO constants
+  byweekday: RRule.Weekday[] | null;
 
   // Day of month specification (future extension)
   bymonthday: number[] | null;
@@ -75,8 +80,10 @@ export interface RecurrenceOptions {
  * Mapping from day name strings to RRule day constants.
  * Used for converting natural language day names to their corresponding
  * RRule constants.
+ * 
+ * Note: We use RRule.Weekday since we're working with constants like RRule.MO.
  */
-export type DayMapping = Record<DayString, Weekday>;
+export type DayMapping = Record<DayString, RRule.Weekday>;
 
 /**
  * Mapping from time unit strings to RRule frequency constants.

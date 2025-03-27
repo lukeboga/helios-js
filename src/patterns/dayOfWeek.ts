@@ -13,6 +13,7 @@ import { RRule } from 'rrule';
 import type { RecurrenceOptions } from '../types';
 import { DAYS, SPECIAL_PATTERNS, PATTERN_PRIORITY } from '../constants';
 import { DAY_MAP, WEEKDAYS, WEEKEND_DAYS, extractDayNames } from './utils';
+import type { DayString } from '../constants';
 
 /**
  * Interface defining a day of week pattern handler implementation
@@ -93,6 +94,7 @@ export function applyDayOfWeekRules(input: string, options: RecurrenceOptions): 
   // Weekday pattern (Monday-Friday)
   if (new RegExp(`\\b${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.WEEKDAY}\\b`).test(input)) {
     options.freq = RRule.WEEKLY;
+    // WEEKDAYS is already of type RRule.Weekday[], which matches our RecurrenceOptions.byweekday
     options.byweekday = WEEKDAYS;
     return;
   }
@@ -100,6 +102,7 @@ export function applyDayOfWeekRules(input: string, options: RecurrenceOptions): 
   // Weekend pattern (Saturday-Sunday)
   if (new RegExp(`\\b${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.WEEKEND}\\b`).test(input)) {
     options.freq = RRule.WEEKLY;
+    // WEEKEND_DAYS is already of type RRule.Weekday[], which matches our RecurrenceOptions.byweekday
     options.byweekday = WEEKEND_DAYS;
     return;
   }
@@ -117,6 +120,7 @@ export function applyDayOfWeekRules(input: string, options: RecurrenceOptions): 
     const matchedDays = extractDayNames(input);
 
     if (matchedDays.length > 0) {
+      // matchedDays is already of type RRule.Weekday[], which matches our RecurrenceOptions.byweekday
       options.byweekday = matchedDays;
 
       // If frequency wasn't set, assume weekly
@@ -139,15 +143,17 @@ export function applyDayOfWeekRules(input: string, options: RecurrenceOptions): 
   // Find all occurrences of "every [day]" patterns
   while ((dayMatch = specificDayRegex.exec(input)) !== null) {
     const day = dayMatch[1].toLowerCase();
-    const dayConstant = DAY_MAP[day];
-
-    if (dayConstant) {
+    
+    // Check if the day string is a valid key in our day mapping
+    if (isValidDayName(day)) {
+      const dayConstant = DAY_MAP[day as DayString];
       daysFound.push(dayConstant);
     }
   }
 
   // If specific days were found
   if (daysFound.length > 0) {
+    // daysFound is already of type RRule.Weekday[], which matches our RecurrenceOptions.byweekday
     options.byweekday = daysFound;
 
     // If frequency wasn't set, assume weekly
@@ -155,6 +161,16 @@ export function applyDayOfWeekRules(input: string, options: RecurrenceOptions): 
       options.freq = RRule.WEEKLY;
     }
   }
+}
+
+/**
+ * Checks if a string is a valid day name in our mapping.
+ * 
+ * @param day - The day name to check (assumed to be already lowercase)
+ * @returns True if the day is a valid key in our DAY_MAP
+ */
+function isValidDayName(day: string): boolean {
+  return Object.keys(DAY_MAP).includes(day);
 }
 
 /**
