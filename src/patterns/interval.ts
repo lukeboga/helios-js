@@ -13,7 +13,7 @@ import { RRule } from 'rrule';
 import type { Frequency } from 'rrule';
 import type { RecurrenceOptions, PatternResult, PatternMatchMetadata } from '../types';
 import { TIME_UNITS, SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
-import { timeUnitToFrequency } from './utils';
+import { timeUnitToFrequency, createPatternResult } from './utils';
 
 /**
  * Interface defining an interval pattern handler implementation
@@ -132,7 +132,7 @@ export function applyIntervalRules(input: string): PatternResult | null {
     setProperties.add('freq');
     
     matchedText = intervalMatch[0];
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.INTERVAL, 'intervalPattern');
   }
 
   // Check for "every other X" pattern
@@ -152,34 +152,11 @@ export function applyIntervalRules(input: string): PatternResult | null {
     setProperties.add('freq');
     
     matchedText = otherMatch[0];
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.INTERVAL, 'intervalPattern');
   }
 
   // If no interval pattern was matched, return null
   return null;
-}
-
-/**
- * Creates a standardized PatternResult object
- */
-function createPatternResult(
-  options: RecurrenceOptions, 
-  matchedText: string,
-  setProperties: Set<keyof RecurrenceOptions>
-): PatternResult {
-  const metadata: PatternMatchMetadata = {
-    patternName: 'intervalPattern',
-    category: PATTERN_CATEGORIES.INTERVAL,
-    matchedText,
-    confidence: 0.9,
-    isPartial: true,
-    setProperties
-  };
-  
-  return {
-    options,
-    metadata
-  };
 }
 
 /**

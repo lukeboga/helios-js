@@ -12,7 +12,7 @@
 import { RRule } from 'rrule';
 import type { RecurrenceOptions, PatternResult, PatternMatchMetadata } from '../types';
 import { DAYS, SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
-import { DAY_MAP, WEEKDAYS, WEEKEND_DAYS, extractDayNames } from './utils';
+import { DAY_MAP, WEEKDAYS, WEEKEND_DAYS, extractDayNames, createPatternResult } from './utils';
 import type { DayString } from '../constants';
 
 /**
@@ -110,7 +110,7 @@ export function applyDayOfWeekRules(input: string): PatternResult | null {
     setProperties.add('freq');
     setProperties.add('byweekday');
     matchedText = weekdayMatch[0];
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.DAY_OF_WEEK, 'dayOfWeekPattern');
   }
 
   // Weekend pattern (Saturday-Sunday)
@@ -121,7 +121,7 @@ export function applyDayOfWeekRules(input: string): PatternResult | null {
     setProperties.add('freq');
     setProperties.add('byweekday');
     matchedText = weekendMatch[0];
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.DAY_OF_WEEK, 'dayOfWeekPattern');
   }
 
   // Check for the common "Day X and Day Y" pattern
@@ -145,7 +145,7 @@ export function applyDayOfWeekRules(input: string): PatternResult | null {
       setProperties.add('byweekday');
       setProperties.add('freq');
       matchedText = combinedDaysMatch[0];
-      return createPatternResult(options, matchedText, setProperties);
+      return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.DAY_OF_WEEK, 'dayOfWeekPattern');
     }
   }
 
@@ -180,34 +180,11 @@ export function applyDayOfWeekRules(input: string): PatternResult | null {
     setProperties.add('byweekday');
     setProperties.add('freq');
     matchedText = fullMatchText;
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.DAY_OF_WEEK, 'dayOfWeekPattern');
   }
 
   // If no day of week pattern was matched, return null
   return null;
-}
-
-/**
- * Creates a standardized PatternResult object
- */
-function createPatternResult(
-  options: RecurrenceOptions, 
-  matchedText: string,
-  setProperties: Set<keyof RecurrenceOptions>
-): PatternResult {
-  const metadata: PatternMatchMetadata = {
-    patternName: 'dayOfWeekPattern',
-    category: PATTERN_CATEGORIES.DAY_OF_WEEK,
-    matchedText,
-    confidence: 0.9,
-    isPartial: true,
-    setProperties
-  };
-  
-  return {
-    options,
-    metadata
-  };
 }
 
 /**

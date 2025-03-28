@@ -11,8 +11,20 @@
 
 import { RRule } from 'rrule';
 import type { Frequency } from 'rrule';
-import type { DayMapping, FrequencyMapping, SynonymMapping } from '../types';
-import { DAYS, TIME_UNITS, MONTH_NAMES } from '../constants';
+import type { 
+  DayMapping, 
+  FrequencyMapping, 
+  SynonymMapping,
+  RecurrenceOptions,
+  PatternResult,
+  PatternMatchMetadata
+} from '../types';
+import { 
+  DAYS, 
+  TIME_UNITS, 
+  MONTH_NAMES,
+  ORDINAL_WORD_MAP
+} from '../constants';
 import type { DayString, TimeUnitString, MonthString } from '../constants';
 import { InvalidDayError, InvalidTimeUnitError, InvalidMonthError } from '../errors';
 
@@ -78,7 +90,6 @@ export const MONTH_MAP: Record<string, number> = {
   [MONTH_NAMES.FEB]: 2,
   [MONTH_NAMES.MAR]: 3,
   [MONTH_NAMES.APR]: 4,
-  [MONTH_NAMES.MAY_ABBR]: 5,
   [MONTH_NAMES.JUN]: 6,
   [MONTH_NAMES.JUL]: 7,
   [MONTH_NAMES.AUG]: 8,
@@ -427,44 +438,6 @@ export function extractOrdinalNumbers(input: string): number[] {
 }
 
 /**
- * Mapping from ordinal words to their numeric values.
- */
-export const ORDINAL_WORD_MAP: Record<string, number> = {
-  'first': 1,
-  'second': 2,
-  'third': 3,
-  'fourth': 4,
-  'fifth': 5,
-  'sixth': 6,
-  'seventh': 7,
-  'eighth': 8,
-  'ninth': 9,
-  'tenth': 10,
-  'eleventh': 11,
-  'twelfth': 12,
-  'thirteenth': 13,
-  'fourteenth': 14,
-  'fifteenth': 15,
-  'sixteenth': 16,
-  'seventeenth': 17,
-  'eighteenth': 18,
-  'nineteenth': 19,
-  'twentieth': 20,
-  'twenty-first': 21,
-  'twenty-second': 22,
-  'twenty-third': 23,
-  'twenty-fourth': 24,
-  'twenty-fifth': 25,
-  'twenty-sixth': 26,
-  'twenty-seventh': 27,
-  'twenty-eighth': 28,
-  'twenty-ninth': 29,
-  'thirtieth': 30,
-  'thirty-first': 31,
-  'last': -1  // Special case for "last day of month"
-};
-
-/**
  * Extracts ordinal words from an input string and converts them to numbers.
  * Recognizes words like "first", "second", "third", etc.
  * 
@@ -527,19 +500,30 @@ export function asWeekdays(weekdays: RRule.Weekday[] | null): RRule.Weekday[] | 
 }
 
 /**
- * Creates a standardized PatternResult object helper
+ * Creates a standardized PatternResult object 
+ * 
+ * This is a centralized utility to ensure consistent PatternResult creation
+ * across all pattern handlers.
+ * 
+ * @param options - The RecurrenceOptions to include in the result
+ * @param matchedText - The text that was matched by the pattern
+ * @param setProperties - Set of properties that were set by this pattern
+ * @param category - Optional category this pattern belongs to
+ * @param patternName - Optional name of this pattern
+ * @param confidence - Optional confidence score (0-1)
+ * @returns A standardized PatternResult object
  */
 export function createPatternResult(
-  options: any, 
-  matchedText: string, 
-  category: string,
-  patternName: string,
-  setProperties: Set<string>,
+  options: RecurrenceOptions, 
+  matchedText: string,
+  setProperties: Set<keyof RecurrenceOptions>,
+  category?: string,
+  patternName?: string,
   confidence = 0.9
-): any {
-  const metadata = {
-    patternName,
-    category,
+): PatternResult {
+  const metadata: PatternMatchMetadata = {
+    patternName: patternName || 'genericPattern',
+    category: category || 'generic',
     matchedText,
     confidence,
     isPartial: true,
@@ -550,4 +534,21 @@ export function createPatternResult(
     options,
     metadata
   };
+}
+
+/**
+ * Utility function to extract numeric day from a string with a suffix like "1st", "2nd", etc.
+ * 
+ * @param text - Text containing an ordinal number like "1st", "2nd", "3rd", etc.
+ * @returns The numeric value or null if not found
+ */
+export function extractNumericDay(text: string): number | null {
+  const match = text.match(/(\d+)(?:st|nd|rd|th)/i);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    if (day >= 1 && day <= 31) {
+      return day;
+    }
+  }
+  return null;
 }

@@ -12,7 +12,7 @@
 import { RRule } from 'rrule';
 import type { RecurrenceOptions, PatternResult, PatternMatchMetadata } from '../types';
 import { FREQUENCY_TERMS, SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
-import { WEEKDAYS, WEEKEND_DAYS } from './utils';
+import { WEEKDAYS, WEEKEND_DAYS, createPatternResult } from './utils';
 
 /**
  * Frequency pattern handler implementation
@@ -77,7 +77,7 @@ export function applyFrequencyRules(input: string): PatternResult | null {
     options.freq = RRule.DAILY;
     setProperties.add('freq');
     matchedText = input.match(new RegExp(`\\b(${FREQUENCY_TERMS.DAILY}|${SPECIAL_PATTERNS.EVERY}\\s+day)\\b`))![0];
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.FREQUENCY, 'frequencyPattern');
   }
 
   // Weekly frequency
@@ -85,7 +85,7 @@ export function applyFrequencyRules(input: string): PatternResult | null {
     options.freq = RRule.WEEKLY;
     setProperties.add('freq');
     matchedText = input.match(new RegExp(`\\b(${FREQUENCY_TERMS.WEEKLY}|${SPECIAL_PATTERNS.EVERY}\\s+week)\\b`))![0];
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.FREQUENCY, 'frequencyPattern');
   }
 
   // Monthly frequency
@@ -93,7 +93,7 @@ export function applyFrequencyRules(input: string): PatternResult | null {
     options.freq = RRule.MONTHLY;
     setProperties.add('freq');
     matchedText = input.match(new RegExp(`\\b(${FREQUENCY_TERMS.MONTHLY}|${SPECIAL_PATTERNS.EVERY}\\s+month)\\b`))![0];
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.FREQUENCY, 'frequencyPattern');
   }
 
   // Yearly frequency
@@ -101,7 +101,7 @@ export function applyFrequencyRules(input: string): PatternResult | null {
     options.freq = RRule.YEARLY;
     setProperties.add('freq');
     matchedText = input.match(new RegExp(`\\b(${FREQUENCY_TERMS.YEARLY}|${FREQUENCY_TERMS.ANNUALLY}|${SPECIAL_PATTERNS.EVERY}\\s+year)\\b`))![0];
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.FREQUENCY, 'frequencyPattern');
   }
 
   // Special case: Weekdays (Monday-Friday)
@@ -111,7 +111,7 @@ export function applyFrequencyRules(input: string): PatternResult | null {
     setProperties.add('freq');
     setProperties.add('byweekday');
     matchedText = input.match(new RegExp(`\\b${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.WEEKDAY}\\b`))![0];
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.FREQUENCY, 'frequencyPattern');
   }
 
   // Special case: Weekend days (Saturday-Sunday)
@@ -121,34 +121,11 @@ export function applyFrequencyRules(input: string): PatternResult | null {
     setProperties.add('freq');
     setProperties.add('byweekday');
     matchedText = input.match(new RegExp(`\\b${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.WEEKEND}\\b`))![0];
-    return createPatternResult(options, matchedText, setProperties);
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.FREQUENCY, 'frequencyPattern');
   }
 
   // If no frequency pattern was matched, return null
   return null;
-}
-
-/**
- * Creates a standardized PatternResult object
- */
-function createPatternResult(
-  options: RecurrenceOptions, 
-  matchedText: string,
-  setProperties: Set<keyof RecurrenceOptions>
-): PatternResult {
-  const metadata: PatternMatchMetadata = {
-    patternName: 'frequencyPattern',
-    category: PATTERN_CATEGORIES.FREQUENCY,
-    matchedText,
-    confidence: 0.9,
-    isPartial: true,
-    setProperties
-  };
-  
-  return {
-    options,
-    metadata
-  };
 }
 
 /**

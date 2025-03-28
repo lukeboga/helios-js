@@ -11,52 +11,8 @@
 
 import { RRule } from 'rrule';
 import type { RecurrenceOptions, PatternResult, PatternMatchMetadata } from '../types';
-import { SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
-
-/**
- * Interface for numeric ordinals with their word forms
- */
-interface OrdinalMapping {
-  [key: string]: number;
-}
-
-/**
- * Mapping from ordinal words to their numeric values
- */
-const ORDINAL_WORD_MAP: OrdinalMapping = {
-  'first': 1,
-  'second': 2,
-  'third': 3,
-  'fourth': 4,
-  'fifth': 5,
-  'sixth': 6,
-  'seventh': 7,
-  'eighth': 8,
-  'ninth': 9,
-  'tenth': 10,
-  'eleventh': 11,
-  'twelfth': 12,
-  'thirteenth': 13,
-  'fourteenth': 14,
-  'fifteenth': 15,
-  'sixteenth': 16,
-  'seventeenth': 17,
-  'eighteenth': 18,
-  'nineteenth': 19,
-  'twentieth': 20,
-  'twenty-first': 21,
-  'twenty-second': 22,
-  'twenty-third': 23,
-  'twenty-fourth': 24,
-  'twenty-fifth': 25,
-  'twenty-sixth': 26,
-  'twenty-seventh': 27,
-  'twenty-eighth': 28,
-  'twenty-ninth': 29,
-  'thirtieth': 30,
-  'thirty-first': 31,
-  'last': -1  // Special case for "last day of month"
-};
+import { SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES, ORDINAL_WORD_MAP } from '../constants';
+import { createPatternResult } from './utils';
 
 /**
  * Day of Month pattern handler that recognizes patterns like "1st of month"
@@ -149,39 +105,12 @@ function applyDayOfMonthPattern(input: string): PatternResult | null {
     };
     
     // Create metadata for this pattern match
-    const metadata: PatternMatchMetadata = {
-      patternName: 'dayOfMonthPattern',
-      category: PATTERN_CATEGORIES.DAY_OF_MONTH,
-      matchedText,
-      confidence: 0.9,
-      isPartial: true,
-      setProperties: new Set(['freq', 'bymonthday'])
-    };
+    const setProperties = new Set<keyof RecurrenceOptions>(['freq', 'bymonthday']);
     
-    return {
-      options,
-      metadata
-    };
+    return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.DAY_OF_MONTH, 'dayOfMonthPattern');
   }
   
   // No day of month pattern was found
-  return null;
-}
-
-/**
- * Utility function to extract numeric day from a string with a suffix like "1st", "2nd", etc.
- * 
- * @param text - Text containing an ordinal number like "1st", "2nd", "3rd", etc.
- * @returns The numeric value or null if not found
- */
-function extractNumericDay(text: string): number | null {
-  const match = text.match(/(\d+)(?:st|nd|rd|th)/i);
-  if (match) {
-    const day = parseInt(match[1], 10);
-    if (day >= 1 && day <= 31) {
-      return day;
-    }
-  }
   return null;
 }
 

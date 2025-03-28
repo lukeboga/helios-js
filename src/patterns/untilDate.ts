@@ -11,6 +11,7 @@
 import * as chrono from 'chrono-node';
 import type { RecurrenceOptions, PatternResult, PatternMatchMetadata } from '../types';
 import { SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
+import { createPatternResult } from './utils';
 
 /**
  * End date pattern handler that recognizes patterns like "until December 31st"
@@ -125,20 +126,10 @@ function applyUntilDatePattern(input: string): PatternResult | null {
     until: untilDate
   };
   
-  // Create metadata for this pattern match
-  const metadata: PatternMatchMetadata = {
-    patternName: 'untilDatePattern',
-    category: PATTERN_CATEGORIES.UNTIL_DATE,
-    matchedText,
-    confidence: 0.9,
-    isPartial: true,
-    setProperties: new Set(['until'])
-  };
+  // Create a set of properties that were modified
+  const setProperties = new Set<keyof RecurrenceOptions>(['until']);
   
-  return {
-    options,
-    metadata
-  };
+  return createPatternResult(options, matchedText, setProperties, PATTERN_CATEGORIES.UNTIL_DATE, 'untilDatePattern');
 }
 
 /**

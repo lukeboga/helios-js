@@ -82,22 +82,29 @@ export function transformRecurrencePattern(
       const patternResults: PatternResult[] = [];
       
       for (const pattern of patterns) {
-        const result = processPatternWithAdapter(pattern, finalConfig);
-        if (result) {
-          patternResults.push(result);
+        try {
+          // Process each pattern using the new-style pattern handlers
+          const result = processPattern(pattern, finalConfig);
           
-          // Add any matched patterns to our tracking list
-          if (result.metadata.patternName) {
-            matchedPatterns.push(result.metadata.patternName);
+          if (result) {
+            patternResults.push(result);
+            
+            // Add any matched patterns to our tracking list
+            if (result.metadata.patternName) {
+              matchedPatterns.push(result.metadata.patternName);
+            }
+            
+            // Update confidence to the minimum of all patterns
+            confidence = Math.min(confidence, result.metadata.confidence);
+            
+            // Add any warnings from this pattern
+            if (result.metadata.warnings) {
+              warnings.push(...result.metadata.warnings);
+            }
           }
-          
-          // Update confidence to the minimum of all patterns
-          confidence = Math.min(confidence, result.metadata.confidence);
-          
-          // Add any warnings from this pattern
-          if (result.metadata.warnings) {
-            warnings.push(...result.metadata.warnings);
-          }
+        } catch (error) {
+          // If processing fails for a sub-pattern, add a warning and continue
+          warnings.push(`Failed to process sub-pattern "${pattern}": ${(error as Error).message}`);
         }
       }
       
@@ -122,191 +129,99 @@ export function transformRecurrencePattern(
         result.warnings = warnings;
         
         return result;
+      } 
+      // If we only found one valid pattern, process it as a regular pattern
+      else if (patternResults.length === 1) {
+        // Use the single matched pattern
+        const result = cleanOptions(patternResults[0].options);
+        
+        // Add metadata
+        result.matchedPatterns = matchedPatterns;
+        result.confidence = confidence;
+        result.warnings = warnings;
+        
+        return result;
       }
-      // If we only found one valid pattern or none, fall back to the traditional approach
     }
     
-    // For single patterns or fallback, use the traditional approach
-    return processTraditional(normalizedInput, finalConfig);
+    // For single patterns or when no combined patterns were found
+    // Convert PatternResult to TransformationResult
+    const patternResult = processPattern(normalizedInput, finalConfig);
+    if (patternResult) {
+      const result = cleanOptions(patternResult.options);
+      
+      // Transfer metadata from pattern result
+      result.matchedPatterns = [patternResult.metadata.patternName];
+      result.confidence = patternResult.metadata.confidence;
+      result.warnings = patternResult.metadata.warnings || [];
+      
+      return result;
+    }
+    
+    // If no pattern was matched, create a basic result
+    const options = initializeOptions();
+    
+    // Apply defaults if required
+    if (finalConfig.applyDefaults) {
+      applyDefaults(options);
+    }
+    
+    // Clean up options
+    const result = cleanOptions(options);
+    result.warnings = ["No matching pattern found"];
+    result.confidence = 0.0;
+    
+    return result;
     
   } catch (error) {
-    // If there was an error in the advanced processing, fall back to the traditional approach
-    console.warn('Error in advanced pattern processing, falling back to traditional approach:', error);
-    return processTraditional(normalizedInput, finalConfig);
+    // If there was an error in the processing, return a basic result with the error
+    const options = initializeOptions();
+    
+    // Apply defaults if required
+    if (finalConfig.applyDefaults) {
+      applyDefaults(options);
+    }
+    
+    // Clean up options
+    const result = cleanOptions(options);
+    
+    // Add error as a warning
+    result.warnings = [(error as Error).message];
+    result.confidence = 0.0;
+    
+    return result;
   }
 }
 
 /**
- * Adapter function that processes a pattern using the existing pattern handlers
- * but returns a PatternResult compatible with the new combiner system.
- * 
- * This function bridges between the old handler.apply(input, options) format
- * and the new handler.apply(input): PatternResult format that's expected by the combiner.
- * 
- * @param pattern - The normalized pattern to process
- * @param config - Configuration for the transformation
- * @returns PatternResult if a pattern was matched, null otherwise
- */
-function processPatternWithAdapter(pattern: string, config: TransformerConfig): PatternResult | null {
-  // Initialize options with defaults
-  const options: RecurrenceOptions = initializeOptions();
-  
-  // Create a PatternResult to return
-  let result: PatternResult | null = null;
-  let matchedHandler = null;
-  
-  // Try each handler to see if it can process this pattern
-  for (const handler of config.handlers) {
-    // Save initial state to detect if handler made changes
-    const optionsBefore = JSON.parse(JSON.stringify(options));
-    
-    // Apply the handler the traditional way
-    // TypeScript doesn't know that our handlers actually support this signature
-    // but we know they do based on implementation
-    (handler as any).apply(pattern, options);
-    
-    // Check if options were modified
-    if (JSON.stringify(options) !== optionsBefore) {
-      // Track which handler matched
-      matchedHandler = handler;
-      
-      // If we're not applying all handlers, stop after the first match
-      if (!config.applyAll) {
-        break;
-      }
-    }
-  }
-  
-  // If a handler matched, create a PatternResult
-  if (matchedHandler) {
-    // Make a deep copy of the options to avoid reference issues
-    const optionsCopy = JSON.parse(JSON.stringify(options));
-    
-    // Recreate any non-serializable properties (like RRule.Weekday objects)
-    if (options.byweekday) {
-      optionsCopy.byweekday = options.byweekday;
-    }
-    
-    // Determine which properties were set by comparing with initial defaults
-    const defaultOptions = initializeOptions();
-    const setProperties = new Set<keyof RecurrenceOptions>();
-    
-    // Check each property in the options object
-    for (const key of Object.keys(options) as Array<keyof RecurrenceOptions>) {
-      // If the value is different from the default, it was set by the handler
-      const defaultValue = defaultOptions[key];
-      const currentValue = options[key];
-      
-      // Compare values, handling arrays specially
-      if (Array.isArray(currentValue)) {
-        // For arrays, check if they have items (non-empty arrays were set)
-        if (currentValue.length > 0) {
-          setProperties.add(key);
-        }
-      } 
-      // For non-array values, directly compare with default
-      else if (currentValue !== defaultValue) {
-        setProperties.add(key);
-      }
-    }
-    
-    result = {
-      options: optionsCopy,
-      metadata: {
-        patternName: matchedHandler.name,
-        category: matchedHandler.category || '',
-        matchedText: pattern,
-        confidence: 0.8, // Default confidence
-        isPartial: true, 
-        setProperties: setProperties
-      }
-    };
-  }
-  
-  return result;
-}
-
-/**
- * Processes a pattern using the traditional approach (for backward compatibility)
+ * Processes a pattern using pattern handlers and returns a PatternResult
  * 
  * @param input - The normalized pattern to process
  * @param config - Configuration for the transformation
- * @returns TransformationResult
+ * @returns PatternResult if a pattern was matched, null otherwise
  */
-function processTraditional(input: string, config: TransformerConfig): TransformationResult {
+function processPattern(input: string, config: TransformerConfig): PatternResult | null {
   // Initialize options with defaults
   const options: RecurrenceOptions = initializeOptions();
 
-  // Track which patterns matched for debugging and metadata
-  const matchedPatterns: string[] = [];
-  
-  // Track confidence and warnings
-  let confidence = 1.0;
-  const warnings: string[] = [];
-
   // Apply pattern handlers in order
   for (const handler of config.handlers) {
-    // Try using the new API first
     try {
-      const result = (handler as any).apply(input);
+      // Use the handler's apply method to process the input
+      const result = handler.apply(input);
       
       if (result) {
-        // This is a new-style handler that returned a PatternResult
-        matchedPatterns.push(handler.name);
-        
-        // Merge the options
-        mergeOptions(options, result.options);
-        
-        // Update confidence
-        confidence = Math.min(confidence, result.metadata.confidence || 1.0);
-        
-        // Add any warnings
-        if (result.metadata.warnings) {
-          warnings.push(...result.metadata.warnings);
-        }
-        
-        // If we're not applying all handlers, stop after the first match
-        if (!config.applyAll) {
-          break;
-        }
+        // We found a matching pattern
+        return result;
       }
-      continue;
-    } catch (e) {
-      // Error or not implemented with the new API, fall back to the old approach
-    }
-    
-    // Fall back to the old approach
-    // Save initial state to detect if handler made changes
-    const optionsBefore = JSON.stringify(options);
-
-    // Apply the handler the traditional way
-    (handler as any).apply(input, options);
-
-    // Check if options were modified
-    if (JSON.stringify(options) !== optionsBefore) {
-      matchedPatterns.push(handler.name);
-
-      // If we're not applying all handlers, stop after the first match
-      if (!config.applyAll) {
-        break;
-      }
+    } catch (error) {
+      // Log the error but continue with other handlers
+      console.warn(`Error in pattern handler ${handler.name}:`, error);
     }
   }
 
-  // Apply defaults if required
-  if (config.applyDefaults) {
-    applyDefaults(options);
-  }
-
-  // Clean up options
-  const result = cleanOptions(options);
-
-  // Add metadata
-  result.matchedPatterns = matchedPatterns;
-  result.confidence = confidence;
-  result.warnings = warnings;
-
-  return result;
+  // If no handler matched, return null
+  return null;
 }
 
 /**

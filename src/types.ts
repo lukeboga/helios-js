@@ -18,22 +18,17 @@ import type { DayString, TimeUnitString } from './constants';
  * Pattern Handler interface defines the structure for all pattern recognition modules.
  * Each pattern handler analyzes input text and updates the rule options accordingly.
  * 
- * This interface allows for consistent implementation of both current and future
- * pattern handlers.
+ * This interface allows for consistent implementation of pattern handlers throughout
+ * the system.
  */
 export interface PatternHandler {
   /**
-   * Applies pattern recognition to input text.
-   * 
-   * This method supports two signatures:
-   * 1. New style: (input: string) => PatternResult | null
-   * 2. Legacy style: (input: string, options: RecurrenceOptions) => void
+   * Applies pattern recognition to input text and returns a result if the pattern matches.
    * 
    * @param input - Normalized recurrence pattern string
-   * @param options - (Optional) Options object for legacy implementations
-   * @returns PatternResult if a pattern was matched (new style), or void (legacy style)
+   * @returns PatternResult if a pattern was matched, null otherwise
    */
-  apply(input: string, options?: RecurrenceOptions): PatternResult | null | void;
+  apply(input: string): PatternResult | null;
 
   /**
    * The priority of this pattern handler in the transformation pipeline.

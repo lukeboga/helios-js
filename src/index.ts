@@ -39,8 +39,8 @@ export type { TransformerConfig, NormalizerOptions };
  * This function is the core conversion mechanism, taking natural language text
  * and transforming it into a structured options object that can be used with RRule.
  * 
- * The `endDate` parameter is no longer needed as it can be specified directly in the
- * recurrence pattern (e.g., "every Monday until December 31st").
+ * End dates can be specified directly in the recurrence pattern 
+ * (e.g., "every Monday until December 31st").
  * 
  * @param startDate - The start date for the recurrence pattern
  * @param recurrencePattern - Natural language description (e.g., "every 2 weeks")
@@ -52,7 +52,7 @@ export type { TransformerConfig, NormalizerOptions };
  * naturalLanguageToRRule(new Date(), "every monday")
  * 
  * @example
- * // Using end date in the pattern instead of as a parameter
+ * // Using end date in the pattern
  * naturalLanguageToRRule(new Date(), "every monday until December 31, 2023")
  */
 export function naturalLanguageToRRule(
@@ -74,12 +74,6 @@ export function naturalLanguageToRRule(
  * 
  * This is a convenience function that combines naturalLanguageToRRule with
  * RRule instantiation, returning a ready-to-use RRule object.
- * 
- * Note on type compatibility: This function handles the type discrepancy between:
- * 1. RRuleOptions (from the rrule package import) - allows null values
- * 2. RRule.Options (from RRule constructor) - uses undefined instead of null
- * 
- * These discrepancies are handled with proper null checks and type conversions.
  * 
  * @param startDate - The start date for the recurrence pattern
  * @param recurrencePattern - Natural language description (e.g., "every Monday")
@@ -106,8 +100,6 @@ export function createRRule(
   const options = naturalLanguageToRRule(startDate, recurrencePattern, config);
   
   // Create a clean options object for the RRule constructor
-  // We use type assertion because we know the values are compatible at runtime
-  // even though TypeScript sees incompatibilities between RRuleOptions and RRule.Options
   const ruleOptions: RRule.Options = {
     freq: options.freq,
     dtstart: startDate,
@@ -130,39 +122,9 @@ export function createRRule(
   // Handle byweekday property specially
   if (options.byweekday !== null) {
     // Direct cast as any -> correct type for RRule constructor
-    // This works at runtime despite the TypeScript type mismatch
     ruleOptions.byweekday = options.byweekday as any;
   }
   
-  return new RRule(ruleOptions);
-}
-
-/**
- * Creates an RRule instance from a natural language recurrence pattern with
- * an explicit end date (legacy method for backward compatibility)
- * 
- * This method is deprecated and provided for backward compatibility.
- * Please use the `createRRule` method and include the end date in the pattern itself.
- * 
- * @deprecated Use `createRRule(startDate, "pattern until endDate")` instead
- * @param startDate - The start date for the recurrence pattern
- * @param recurrencePattern - Natural language description (e.g., "every Monday")
- * @param endDate - End date for the recurrence pattern
- * @returns An RRule instance
- */
-export function createRRuleWithEndDate(
-  startDate: Date,
-  recurrencePattern: string,
-  endDate: Date
-): RRule {
-  // Clone the options
-  const options = naturalLanguageToRRule(startDate, recurrencePattern);
-  
-  // Add the end date
-  options.until = endDate;
-  
-  // Create the rule with these options
-  const ruleOptions: RRule.Options = { ...options as any };
   return new RRule(ruleOptions);
 }
 
