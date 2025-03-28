@@ -14,6 +14,7 @@ import type { Frequency } from 'rrule';
 import type { DayMapping, FrequencyMapping } from '../types';
 import { DAYS, TIME_UNITS } from '../constants';
 import type { DayString, TimeUnitString } from '../constants';
+import { InvalidDayError, InvalidTimeUnitError } from '../errors';
 
 /**
  * Maps day names (and abbreviations) to RRule day constants.
@@ -103,7 +104,7 @@ export function isValidDayName(day: string): boolean {
  * 
  * @param day - The day name to convert (case-insensitive)
  * @returns The RRule day constant
- * @throws Error if the day name is invalid
+ * @throws InvalidDayError if the day name is invalid
  * 
  * @example
  * dayNameToRRuleDay('monday') // returns RRule.MO
@@ -115,7 +116,7 @@ export function dayNameToRRuleDay(day: string): RRule.Weekday {
     // Use type assertion since we've already verified this is a valid day name key
     return DAY_MAP[normalizedDay as DayString];
   }
-  throw new Error(`Invalid day name: ${day}`);
+  throw new InvalidDayError(day);
 }
 
 /**
@@ -139,7 +140,7 @@ export function isValidTimeUnit(unit: string): boolean {
  * 
  * @param unit - The time unit to convert (case-insensitive)
  * @returns The RRule frequency constant
- * @throws Error if the time unit is invalid
+ * @throws InvalidTimeUnitError if the time unit is invalid
  * 
  * @example
  * timeUnitToFrequency('week') // returns RRule.WEEKLY
@@ -152,7 +153,7 @@ export function timeUnitToFrequency(unit: string): Frequency {
     // Use type assertion since we've already verified this is a valid time unit key
     return FREQUENCY_MAP[singularUnit as TimeUnitString];
   }
-  throw new Error(`Invalid time unit: ${unit}`);
+  throw new InvalidTimeUnitError(unit);
 }
 
 /**
