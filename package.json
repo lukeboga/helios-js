@@ -19,11 +19,13 @@
     "natural-language"
   ],
   "dependencies": {
-    "rrule": "^2.8.1"
+    "rrule": "^2.8.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.13",
     "@types/rrule": "^2.1.7",
+    "@types/uuid": "^10.0.0",
     "esbuild-register": "^3.6.0",
     "typescript": "^5.8.2",
     "vite": "^6.2.3",

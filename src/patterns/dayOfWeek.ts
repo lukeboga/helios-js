@@ -11,7 +11,7 @@
 
 import { RRule } from 'rrule';
 import type { RecurrenceOptions } from '../types';
-import { DAYS, SPECIAL_PATTERNS, PATTERN_PRIORITY } from '../constants';
+import { DAYS, SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
 import { DAY_MAP, WEEKDAYS, WEEKEND_DAYS, extractDayNames } from './utils';
 import type { DayString } from '../constants';
 
@@ -36,6 +36,11 @@ export interface DayOfWeekPatternHandler {
    * Descriptive name of this pattern handler
    */
   name: string;
+
+  /**
+   * The category this pattern handler belongs to
+   */
+  category: string;
 }
 
 /**
@@ -60,7 +65,12 @@ export const dayOfWeekPatternHandler: DayOfWeekPatternHandler = {
   /**
    * Descriptive name of this pattern handler
    */
-  name: 'Day of Week Pattern Handler'
+  name: 'Day of Week Pattern Handler',
+
+  /**
+   * The category this pattern handler belongs to
+   */
+  category: PATTERN_CATEGORIES.DAY_OF_WEEK
 };
 
 /**

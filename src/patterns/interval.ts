@@ -12,7 +12,7 @@
 import { RRule } from 'rrule';
 import type { Frequency } from 'rrule';
 import type { RecurrenceOptions } from '../types';
-import { TIME_UNITS, SPECIAL_PATTERNS, PATTERN_PRIORITY } from '../constants';
+import { TIME_UNITS, SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
 import { timeUnitToFrequency } from './utils';
 
 /**
@@ -36,6 +36,11 @@ export interface IntervalPatternHandler {
    * Descriptive name of this pattern handler
    */
   name: string;
+
+  /**
+   * The category this pattern handler belongs to
+   */
+  category: string;
 }
 
 /**
@@ -60,7 +65,12 @@ export const intervalPatternHandler: IntervalPatternHandler = {
   /**
    * Descriptive name of this pattern handler
    */
-  name: 'Interval Pattern Handler'
+  name: 'Interval Pattern Handler',
+  
+  /**
+   * The category this pattern handler belongs to
+   */
+  category: PATTERN_CATEGORIES.INTERVAL
 };
 
 /**
@@ -111,7 +121,7 @@ export function applyIntervalRules(input: string, options: RecurrenceOptions): v
   // Check for "every other X" pattern
   // This is a special case that sets interval to 2
   const otherMatch = new RegExp(
-    `${SPECIAL_PATTERNS.EVERY_OTHER}\\s+(${TIME_UNITS.DAY}|${TIME_UNITS.WEEK}|${TIME_UNITS.MONTH}|${TIME_UNITS.YEAR})`,
+    `${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.OTHER}\\s+(${TIME_UNITS.DAY}|${TIME_UNITS.WEEK}|${TIME_UNITS.MONTH}|${TIME_UNITS.YEAR})`,
     'i'
   ).exec(input);
 

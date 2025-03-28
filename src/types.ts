@@ -23,12 +23,17 @@ import type { DayString, TimeUnitString } from './constants';
  */
 export interface PatternHandler {
   /**
-   * Applies pattern recognition to input text and modifies options.
+   * Applies pattern recognition to input text.
+   * 
+   * This method supports two signatures:
+   * 1. New style: (input: string) => PatternResult | null
+   * 2. Legacy style: (input: string, options: RecurrenceOptions) => void
    * 
    * @param input - Normalized recurrence pattern string
-   * @param options - Rule options object that will be modified based on pattern matches
+   * @param options - (Optional) Options object for legacy implementations
+   * @returns PatternResult if a pattern was matched (new style), or void (legacy style)
    */
-  apply(input: string, options: RecurrenceOptions): void;
+  apply(input: string, options?: RecurrenceOptions): PatternResult | null | void;
 
   /**
    * The priority of this pattern handler in the transformation pipeline.
@@ -40,6 +45,70 @@ export interface PatternHandler {
    * Descriptive name of the pattern handler for debugging and logging.
    */
   name: string;
+
+  /**
+   * The category this pattern handler belongs to.
+   * Used for enabling/disabling groups of related patterns.
+   */
+  category: string;
+}
+
+/**
+ * Represents the result of a pattern match, including the recognized options
+ * and metadata about the match.
+ */
+export interface PatternResult {
+  /**
+   * The recurrence options extracted from the pattern.
+   */
+  options: RecurrenceOptions;
+  
+  /**
+   * Metadata about the pattern match.
+   */
+  metadata: PatternMatchMetadata;
+}
+
+/**
+ * Metadata about a pattern match, useful for debugging, combining patterns,
+ * and providing user feedback.
+ */
+export interface PatternMatchMetadata {
+  /**
+   * The pattern handler name that produced this result.
+   */
+  patternName: string;
+  
+  /**
+   * The pattern category (frequency, interval, dayOfWeek, etc.)
+   */
+  category: string;
+  
+  /**
+   * The specific text that was matched.
+   */
+  matchedText: string;
+  
+  /**
+   * The confidence level of this match (0.0 to 1.0).
+   * Higher values indicate more certain matches.
+   */
+  confidence: number;
+  
+  /**
+   * Whether this is a partial match that might be combined with others.
+   */
+  isPartial: boolean;
+  
+  /**
+   * The specific properties that were set by this pattern.
+   */
+  setProperties: Set<keyof RecurrenceOptions>;
+  
+  /**
+   * Optional warnings about this pattern match.
+   */
+  warnings?: string[];
 }
 
 /**
@@ -74,6 +143,207 @@ export interface RecurrenceOptions {
   // Positional pattern support (future extension)
   // This will handle patterns like "first Monday of month"
   bysetpos?: number[] | null;
+  
+  // End date specification (parsed from natural language)
+  until?: Date | null;
+  
+  // Count specification (for "X times" patterns)
+  count?: number | null;
+  
+  // Tracking which properties have been explicitly set by patterns
+  // This is useful for pattern combination and conflict resolution
+  setProperties?: Set<keyof RecurrenceOptions>;
+  
+  // Source information for debugging and user feedback
+  sourcePatterns?: string[];
+}
+
+/**
+ * Pattern Combiner interface defines how multiple pattern results can be combined.
+ * This allows for handling complex recurrence expressions like "every Monday and the first of the month".
+ */
+export interface PatternCombiner {
+  /**
+   * The name of this combiner for debugging and logging.
+   */
+  name: string;
+  
+  /**
+   * Priority of this combiner in the combination pipeline.
+   * Higher priority combiners are applied first.
+   */
+  priority: number;
+  
+  /**
+   * Determines if this combiner can combine the given pattern results.
+   * 
+   * @param pattern1 - First pattern result
+   * @param pattern2 - Second pattern result
+   * @returns true if the patterns can be combined, false otherwise
+   */
+  canCombine(pattern1: PatternResult, pattern2: PatternResult): boolean;
+  
+  /**
+   * Combines two compatible pattern results into a single result.
+   * 
+   * @param pattern1 - First pattern result
+   * @param pattern2 - Second pattern result
+   * @returns Combined pattern result
+   */
+  combine(pattern1: PatternResult, pattern2: PatternResult): PatternResult;
+}
+
+/**
+ * Pattern matching configuration options to control how patterns are recognized.
+ */
+export interface PatternMatchingConfig {
+  /**
+   * Controls how strictly pattern text is matched.
+   * - strict: Exact matches only
+   * - normal: Minor variations allowed (default)
+   * - loose: Accept more variations and synonyms
+   */
+  matchingMode?: 'strict' | 'normal' | 'loose';
+  
+  /**
+   * Custom synonyms to recognize for pattern keywords.
+   * Example: { "each": "every", "fortnightly": "every 2 weeks" }
+   */
+  synonyms?: Record<string, string>;
+  
+  /**
+   * Whether to recognize patterns with spelling errors.
+   * Uses edit distance to identify likely matches.
+   */
+  allowSpellingErrors?: boolean;
+  
+  /**
+   * Maximum edit distance to consider for spelling errors.
+   * Only used when allowSpellingErrors is true.
+   * Default is 2.
+   */
+  maxEditDistance?: number;
+}
+
+/**
+ * Pattern resolution configuration to control how conflicts are handled.
+ */
+export interface PatternResolutionConfig {
+  /**
+   * Custom priority values for pattern handlers.
+   * Higher values give higher priority.
+   */
+  patternPriorities?: Partial<Record<string, number>>;
+  
+  /**
+   * Resolution strategy when patterns conflict.
+   * - first: Use first pattern found (based on priority)
+   * - all: Try to combine all patterns (default)
+   * - mostSpecific: Use the most specific pattern
+   */
+  conflictResolution?: 'first' | 'all' | 'mostSpecific';
+  
+  /**
+   * Whether later patterns can override earlier patterns.
+   */
+  allowOverrides?: boolean;
+}
+
+/**
+ * Pattern selection configuration to control which patterns are used.
+ */
+export interface PatternSelectionConfig {
+  /**
+   * Enabled pattern categories.
+   * If empty, all patterns are enabled.
+   */
+  enabledPatterns?: string[];
+  
+  /**
+   * Disabled pattern categories.
+   * Takes precedence over enabledPatterns.
+   */
+  disabledPatterns?: string[];
+  
+  /**
+   * Custom pattern handlers to inject into the pipeline.
+   */
+  customPatterns?: PatternHandler[];
+}
+
+/**
+ * Transformation configuration options.
+ */
+export interface TransformationConfig {
+  /**
+   * Whether to normalize input text before processing.
+   */
+  normalizeInput?: boolean;
+  
+  /**
+   * Normalization options for input text.
+   */
+  normalizationOptions?: {
+    lowercase?: boolean;
+    trimWhitespace?: boolean;
+    removeExtraSpaces?: boolean;
+    removePunctuation?: boolean;
+  };
+  
+  /**
+   * Whether to apply default values for properties
+   * not explicitly set by patterns.
+   */
+  applyDefaults?: boolean;
+  
+  /**
+   * Custom default values to use.
+   */
+  defaultValues?: Partial<RecurrenceOptions>;
+  
+  /**
+   * Whether to generate warnings for ambiguous patterns.
+   */
+  generateWarnings?: boolean;
+}
+
+/**
+ * Complete configuration options for the HeliosJS library.
+ */
+export interface HeliosConfig {
+  /**
+   * Pattern matching configuration.
+   */
+  matching?: PatternMatchingConfig;
+  
+  /**
+   * Pattern resolution configuration.
+   */
+  resolution?: PatternResolutionConfig;
+  
+  /**
+   * Pattern selection configuration.
+   */
+  patterns?: PatternSelectionConfig;
+  
+  /**
+   * Transformation process configuration.
+   */
+  transformation?: TransformationConfig;
+  
+  /**
+   * Whether to cache results for repeated inputs.
+   */
+  enableCaching?: boolean;
+  
+  /**
+   * Debug mode options.
+   */
+  debug?: {
+    enabled?: boolean;
+    logLevel?: 'error' | 'warn' | 'info' | 'debug';
+    detailedResults?: boolean;
+  };
 }
 
 /**
@@ -113,6 +383,16 @@ export interface TransformerConfig {
    * Default is true.
    */
   applyDefaults?: boolean;
+  
+  /**
+   * List of pattern combiners to apply, in priority order.
+   */
+  combiners?: PatternCombiner[];
+  
+  /**
+   * Complete configuration for the transformation process.
+   */
+  config?: HeliosConfig;
 }
 
 /**
@@ -132,4 +412,10 @@ export interface TransformationResult extends RRuleOptions {
    * or potentially conflicting patterns.
    */
   warnings?: string[];
+  
+  /**
+   * Confidence score of the transformation (0.0 to 1.0).
+   * Higher values indicate more certain interpretations.
+   */
+  confidence?: number;
 }

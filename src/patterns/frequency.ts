@@ -11,7 +11,7 @@
 
 import { RRule } from 'rrule';
 import type { RecurrenceOptions } from '../types';
-import { FREQUENCY_TERMS, SPECIAL_PATTERNS, PATTERN_PRIORITY } from '../constants';
+import { FREQUENCY_TERMS, SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
 import { WEEKDAYS, WEEKEND_DAYS } from './utils';
 
 /**
@@ -35,6 +35,11 @@ export interface FrequencyPatternHandler {
    * Descriptive name of this pattern handler
    */
   name: string;
+  
+  /**
+   * The category this pattern handler belongs to
+   */
+  category: string;
 }
 
 /**
@@ -59,7 +64,12 @@ export const frequencyPatternHandler: FrequencyPatternHandler = {
   /**
    * Descriptive name of this pattern handler
    */
-  name: 'Frequency Pattern Handler'
+  name: 'Frequency Pattern Handler',
+  
+  /**
+   * The category this pattern handler belongs to
+   */
+  category: PATTERN_CATEGORIES.FREQUENCY
 };
 
 /**
