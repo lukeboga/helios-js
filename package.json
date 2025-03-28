@@ -12,6 +12,7 @@
     "build": "vite build",
     "test": "vitest",
     "simple-test": "npm run build && node -r esbuild-register test/simple-test.ts",
+    "fuzzy-test": "node -r esbuild-register test/fuzzy-match-test.ts",
     "ts-node": "node --loader ts-node/esm"
   },
   "keywords": [
@@ -21,6 +22,7 @@
   ],
   "dependencies": {
     "chrono-node": "^2.7.8",
+    "fastest-levenshtein": "^1.0.16",
     "rrule": "^2.8.1",
     "uuid": "^11.1.0"
   },

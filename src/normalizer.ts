@@ -10,8 +10,9 @@
  * ensuring that downstream pattern recognition has clean, consistent input.
  */
 
-import { TERM_SYNONYMS, DAY_NAME_VARIANTS, MONTH_NAME_VARIANTS } from './constants';
+import { TERM_SYNONYMS, DAY_NAME_VARIANTS, MONTH_NAME_VARIANTS, DAYS, MONTHS } from './constants';
 import { applySynonyms } from './patterns/utils';
+import { findBestMatch } from './utils/fuzzyMatch';
 
 /**
  * Configuration options for the normalizer.
@@ -64,6 +65,13 @@ export interface NormalizerOptions {
    * Default: true
    */
   normalizePunctuation?: boolean;
+  
+  /**
+   * The fuzzy matching threshold for spell correction.
+   * Higher values require closer matches (0.0 to 1.0).
+   * Default: 0.85
+   */
+  spellingCorrectionThreshold?: number;
 }
 
 /**
@@ -77,21 +85,25 @@ const defaultOptions: NormalizerOptions = {
   normalizeDayNames: true,
   applySynonyms: true,
   correctMisspellings: true,
-  normalizePunctuation: true
+  normalizePunctuation: true,
+  spellingCorrectionThreshold: 0.85
 };
 
 /**
  * Normalizes a natural language recurrence pattern for more consistent pattern matching.
  * 
  * This function applies several transformations to make the input more consistent:
- * 1. Converts text to lowercase for case-insensitive matching
- * 2. Normalizes whitespace (converts multiple spaces to single spaces)
- * 3. Trims leading and trailing whitespace
- * 4. Removes ordinal suffixes from numbers (e.g., "1st" becomes "1") unless preserveOrdinalSuffixes is true
- * 5. Normalizes day names (e.g., "Mondays" to "monday")
- * 6. Applies synonym replacements (e.g., "fortnightly" to "every 2 weeks")
- * 7. Corrects common misspellings (e.g., "mondey" to "monday")
+ * 1. Corrects common misspellings (e.g., "mondey" to "monday") if enabled
+ * 2. Converts text to lowercase for case-insensitive matching
+ * 3. Normalizes whitespace (converts multiple spaces to single spaces)
+ * 4. Trims leading and trailing whitespace
+ * 5. Removes ordinal suffixes from numbers (e.g., "1st" becomes "1") unless preserveOrdinalSuffixes is true
+ * 6. Normalizes day names (e.g., "Mondays" to "monday")
+ * 7. Applies synonym replacements (e.g., "fortnightly" to "every 2 weeks")
  * 8. Normalizes punctuation (e.g., replacing semicolons with spaces)
+ * 
+ * Note: Misspelling correction now happens BEFORE other normalization steps to ensure
+ * that pattern matchers receive well-formed input.
  * 
  * @param input - The raw natural language recurrence pattern
  * @param options - Optional configuration options
@@ -115,10 +127,13 @@ export function normalizeInput(input: string, options?: Partial<NormalizerOption
   
   let normalized = input;
   
-  // Convert to lowercase if enabled
-  if (opts.lowercase) {
-    normalized = normalized.toLowerCase();
+  // FIRST: Correct common misspellings if enabled
+  // This happens before other normalization to ensure correct terms for pattern matching
+  if (opts.correctMisspellings) {
+    normalized = correctMisspellings(normalized, opts.spellingCorrectionThreshold);
   }
+  
+  // Apply other normalization steps
   
   // Normalize whitespace if enabled
   if (opts.normalizeWhitespace) {
@@ -145,9 +160,9 @@ export function normalizeInput(input: string, options?: Partial<NormalizerOption
     normalized = applyTermSynonyms(normalized);
   }
   
-  // Correct common misspellings if enabled
-  if (opts.correctMisspellings) {
-    normalized = correctMisspellings(normalized);
+  // Convert to lowercase if enabled - do this AFTER corrections to preserve case sensitivity
+  if (opts.lowercase) {
+    normalized = normalized.toLowerCase();
   }
   
   // Normalize punctuation if enabled
@@ -262,28 +277,131 @@ export function applyTermSynonyms(input: string): string {
 }
 
 /**
- * Corrects common misspellings of day and month names.
+ * Corrects common misspellings of day and month names using both explicit mappings
+ * and fuzzy matching.
+ * 
+ * This function uses two approaches to correct misspellings:
+ * 1. Explicit mappings for known common misspellings (fast and predictable)
+ * 2. Fuzzy matching as a fallback for variations not covered by explicit mappings
  * 
  * @param input - The input text to correct
+ * @param threshold - Similarity threshold for fuzzy matching (0.0 to 1.0)
  * @returns Text with corrected spelling
  * 
  * @example
  * correctMisspellings("every mondey and tusday")
  * // returns "every monday and tuesday"
+ * 
+ * @example
+ * correctMisspellings("meeting on wendesday")
+ * // returns "meeting on wednesday"
  */
-export function correctMisspellings(input: string): string {
-  let result = input.toLowerCase();
+export function correctMisspellings(input: string, threshold = 0.85): string {
+  // Step 1: Apply explicit mappings for known misspellings (fast and reliable)
+  let result = correctExplicitMisspellings(input);
   
-  // Correct day name misspellings
+  // Step 2: Apply fuzzy matching for words not corrected by explicit mappings
+  // Split into words for word-by-word processing
+  const words = result.split(/\b/);
+  
+  // Prepare reference lists for fuzzy matching
+  const dayNames = Object.values(DAYS);
+  const monthNames = Object.values(MONTHS);
+  
+  // Create a map for preserving case
+  const standardForms: Record<string, string> = {};
+  
+  // Add all day names with proper capitalization
+  dayNames.forEach(day => {
+    const lowercaseDay = day.toLowerCase();
+    standardForms[lowercaseDay] = day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
+  });
+  
+  // Add all month names with proper capitalization
+  monthNames.forEach(month => {
+    const lowercaseMonth = month.toLowerCase();
+    standardForms[lowercaseMonth] = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+  });
+  
+  // Process each word
+  const correctedWords = words.map(word => {
+    const trimmedWord = word.trim();
+    
+    // Skip non-word parts (spaces, punctuation) and very short words or numeric words
+    if (
+      trimmedWord.length < 3 || 
+      !/^[a-z]+$/i.test(trimmedWord) || 
+      /^\d+(?:st|nd|rd|th)?$/.test(trimmedWord)
+    ) {
+      return word;
+    }
+    
+    // Try fuzzy matching against day names
+    const dayMatch = findBestMatch(trimmedWord, dayNames, threshold);
+    if (dayMatch) {
+      // Check for capitalization in the original word
+      return trimmedWord.charAt(0).toUpperCase() === trimmedWord.charAt(0) 
+        ? standardForms[dayMatch.toLowerCase()]
+        : dayMatch.toLowerCase();
+    }
+    
+    // Try fuzzy matching against month names
+    const monthMatch = findBestMatch(trimmedWord, monthNames, threshold);
+    if (monthMatch) {
+      // Check for capitalization in the original word
+      return trimmedWord.charAt(0).toUpperCase() === trimmedWord.charAt(0)
+        ? standardForms[monthMatch.toLowerCase()]
+        : monthMatch.toLowerCase();
+    }
+    
+    // No corrections needed
+    return word;
+  });
+  
+  return correctedWords.join('');
+}
+
+/**
+ * Helper function to apply explicit misspelling corrections.
+ * Uses predefined mappings for common misspellings.
+ * 
+ * @param input - The input text to correct
+ * @returns Text with explicit corrections applied
+ * @private
+ */
+function correctExplicitMisspellings(input: string): string {
+  let result = input;
+  
+  // Correct day name misspellings, preserving case
   for (const [misspelling, correction] of Object.entries(DAY_NAME_VARIANTS)) {
+    // Create a case-insensitive regex
     const regex = new RegExp(`\\b${misspelling}\\b`, 'gi');
-    result = result.replace(regex, correction);
+    
+    // Replace while preserving case pattern
+    result = result.replace(regex, match => {
+      // If first letter is uppercase, capitalize the correction
+      if (match.charAt(0).toUpperCase() === match.charAt(0)) {
+        return correction.charAt(0).toUpperCase() + correction.slice(1).toLowerCase();
+      }
+      // Otherwise, use lowercase
+      return correction.toLowerCase();
+    });
   }
   
-  // Correct month name misspellings
+  // Correct month name misspellings, preserving case
   for (const [misspelling, correction] of Object.entries(MONTH_NAME_VARIANTS)) {
+    // Create a case-insensitive regex
     const regex = new RegExp(`\\b${misspelling}\\b`, 'gi');
-    result = result.replace(regex, correction);
+    
+    // Replace while preserving case pattern
+    result = result.replace(regex, match => {
+      // If first letter is uppercase, capitalize the correction
+      if (match.charAt(0).toUpperCase() === match.charAt(0)) {
+        return correction.charAt(0).toUpperCase() + correction.slice(1).toLowerCase();
+      }
+      // Otherwise, use lowercase
+      return correction.toLowerCase();
+    });
   }
   
   return result;

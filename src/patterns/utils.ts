@@ -27,6 +27,7 @@ import {
 } from '../constants';
 import type { DayString, TimeUnitString, MonthString } from '../constants';
 import { InvalidDayError, InvalidTimeUnitError, InvalidMonthError } from '../errors';
+import { fuzzyMatchWord as fuzzyMatch } from '../utils/fuzzyMatch';
 
 /**
  * Maps day names (and abbreviations) to RRule day constants.
@@ -352,72 +353,6 @@ export function applySynonyms(input: string): string {
   }
   
   return normalizedInput;
-}
-
-/**
- * Performs fuzzy matching for a term in an input string.
- * Considers common misspellings and variations.
- * 
- * @param input - The input string to search in
- * @param term - The term to match (with variations)
- * @param threshold - Similarity threshold (0.0 to 1.0, higher is more strict)
- * @returns True if a fuzzy match is found, false otherwise
- * 
- * @example
- * fuzzyMatch('every mondey', 'monday', 0.8) // returns true
- */
-export function fuzzyMatch(input: string, term: string, threshold = 0.8): boolean {
-  const normalizedInput = input.toLowerCase();
-  const normalizedTerm = term.toLowerCase();
-  
-  // Exact match is always valid
-  if (normalizedInput.includes(normalizedTerm)) {
-    return true;
-  }
-  
-  // Simple character-based similarity measure (Levenshtein distance divided by max length)
-  function similarity(a: string, b: string): number {
-    if (a.length === 0) return b.length;
-    if (b.length === 0) return a.length;
-    
-    const matrix: number[][] = [];
-    
-    // Initialize matrix
-    for (let i = 0; i <= a.length; i++) {
-      matrix[i] = [i];
-    }
-    
-    for (let j = 0; j <= b.length; j++) {
-      matrix[0][j] = j;
-    }
-    
-    // Fill matrix
-    for (let i = 1; i <= a.length; i++) {
-      for (let j = 1; j <= b.length; j++) {
-        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j] + 1,      // deletion
-          matrix[i][j - 1] + 1,      // insertion
-          matrix[i - 1][j - 1] + cost // substitution
-        );
-      }
-    }
-    
-    // Calculate similarity
-    const distance = matrix[a.length][b.length];
-    const maxLength = Math.max(a.length, b.length);
-    return 1 - (distance / maxLength);
-  }
-  
-  // Check each word in the input
-  const words = normalizedInput.split(/\s+/);
-  for (const word of words) {
-    if (similarity(word, normalizedTerm) >= threshold) {
-      return true;
-    }
-  }
-  
-  return false;
 }
 
 /**

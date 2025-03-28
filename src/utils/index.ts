@@ -11,6 +11,9 @@ export * from './date';
 // Re-export type conversion utilities
 export * from './type-conversions';
 
+// Re-export fuzzy matching utilities
+export * from './fuzzyMatch';
+
 /**
  * Future utility categories would be added here as new files and re-exported.
  * Examples might include:

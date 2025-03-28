@@ -12,7 +12,7 @@
 import { RRule } from 'rrule';
 import type { RecurrenceOptions, PatternResult, PatternMatchMetadata } from '../types';
 import { DAYS, SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
-import { DAY_MAP, WEEKDAYS, WEEKEND_DAYS, extractDayNames, createPatternResult } from './utils';
+import { DAY_MAP, WEEKDAYS, WEEKEND_DAYS, extractDayNames, createPatternResult, isValidDayName, dayNameToRRuleDay } from './utils';
 import type { DayString } from '../constants';
 
 /**
@@ -185,16 +185,6 @@ export function applyDayOfWeekRules(input: string): PatternResult | null {
 
   // If no day of week pattern was matched, return null
   return null;
-}
-
-/**
- * Checks if a string is a valid day name in our mapping.
- * 
- * @param day - The day name to check (assumed to be already lowercase)
- * @returns True if the day is a valid key in our DAY_MAP
- */
-function isValidDayName(day: string): boolean {
-  return Object.keys(DAY_MAP).includes(day);
 }
 
 /**
