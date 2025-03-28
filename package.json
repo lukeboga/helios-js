@@ -11,7 +11,8 @@
     "dev": "vite",
     "build": "vite build",
     "test": "vitest",
-    "simple-test": "npm run build && node -r esbuild-register test/simple-test.ts"
+    "simple-test": "npm run build && node -r esbuild-register test/simple-test.ts",
+    "ts-node": "node --loader ts-node/esm"
   },
   "keywords": [
     "rrule",
@@ -19,6 +20,7 @@
     "natural-language"
   ],
   "dependencies": {
+    "chrono-node": "^2.7.8",
     "rrule": "^2.8.1",
     "uuid": "^11.1.0"
   },
@@ -27,6 +29,7 @@
     "@types/rrule": "^2.1.7",
     "@types/uuid": "^10.0.0",
     "esbuild-register": "^3.6.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
     "vite": "^6.2.3",
     "vitest": "^3.0.9"

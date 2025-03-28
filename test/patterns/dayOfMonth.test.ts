@@ -1,7 +1,7 @@
 import { RRule } from 'rrule';
 import { dayOfMonthPatternHandler } from '../../src/patterns/dayOfMonth';
 import { transformRecurrencePattern } from '../../src/transformer';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 
 describe('Day of Month Pattern Handler', () => {
   // Test the standalone pattern handler

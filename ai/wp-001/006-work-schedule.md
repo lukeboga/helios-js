@@ -59,6 +59,10 @@ After careful consideration, I believe the most logical starting point is updati
 9. **Create `patterns/untilDate.ts`**
    - Implement pattern handler for end date expressions
    - Add support for date parsing from natural language
+   - **✅ DONE**: Created untilDatePatternHandler that:
+     - Detects end date terms like "until", "ending on", etc.
+     - Uses chrono-node for natural language date parsing
+     - Handles formatted dates and has backup manual parsing
 
 ## Phase 4: API and Integration
 10. **Update `normalizer.ts`**
@@ -74,7 +78,8 @@ After careful consideration, I believe the most logical starting point is updati
     - Implement simple Node.js scripts to validate functionality
     - Test various pattern combinations
     - **✅ DONE**: Added test suite for `dayOfMonth` pattern handler
-    - Add tests for hybrid pattern handling approach
+    - **✅ DONE**: Added test suite for `untilDate` pattern handler
+    - **✅ DONE**: Created comprehensive tests for the hybrid pattern handling system
 
 ## Phase 5: Documentation and Refinement
 13. **Add Pattern Documentation**

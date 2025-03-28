@@ -11,7 +11,7 @@
 
 import { RRule } from 'rrule';
 import type { Frequency } from 'rrule';
-import type { RecurrenceOptions } from '../types';
+import type { RecurrenceOptions, PatternResult, PatternMatchMetadata } from '../types';
 import { TIME_UNITS, SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
 import { timeUnitToFrequency } from './utils';
 
@@ -22,10 +22,10 @@ export interface IntervalPatternHandler {
   /**
    * Applies interval pattern recognition to the input string
    * 
-   * @param input - Normalized recurrence pattern string  
-   * @param options - Options object to be updated with recognized patterns
+   * @param input - Normalized recurrence pattern string
+   * @returns PatternResult if a pattern was matched, null otherwise
    */
-  apply(input: string, options: RecurrenceOptions): void;
+  apply(input: string): PatternResult | null;
 
   /**
    * The priority of this pattern handler
@@ -46,15 +46,16 @@ export interface IntervalPatternHandler {
 /**
  * Interval pattern handler implementation
  */
-export const intervalPatternHandler: IntervalPatternHandler = {
+export const intervalPatternHandler = {
   /**
    * Applies interval pattern recognition to the input string
    * 
-   * @param input - Normalized recurrence pattern string  
-   * @param options - Options object to be updated with recognized patterns
+   * @param input - Normalized recurrence pattern string
+   * @returns PatternResult if a pattern was matched, null otherwise
    */
-  apply(input: string, options: RecurrenceOptions): void {
-    applyIntervalRules(input, options);
+  apply(input: string): PatternResult | null {
+    const result = applyIntervalRules(input);
+    return result;
   },
 
   /**
@@ -85,7 +86,7 @@ const unitToFrequency: Record<string, Frequency> = {
 };
 
 /**
- * Applies interval transformation rules to the input string and updates the options object
+ * Applies interval transformation rules to the input string
  * 
  * This function recognizes:
  * - Numeric intervals ("every 2 days", "every 3 weeks", etc.)
@@ -95,9 +96,22 @@ const unitToFrequency: Record<string, Frequency> = {
  * on the time unit specified in the pattern.
  * 
  * @param input - Normalized recurrence pattern string
- * @param options - Options object to be updated with recognized patterns
+ * @returns PatternResult if a pattern was matched, null otherwise
  */
-export function applyIntervalRules(input: string, options: RecurrenceOptions): void {
+export function applyIntervalRules(input: string): PatternResult | null {
+  // Initialize options
+  const options: RecurrenceOptions = {
+    freq: null,
+    interval: 1,
+    byweekday: null,
+    bymonthday: null,
+    bymonth: null
+  };
+  
+  // Track which properties are set
+  const setProperties = new Set<keyof RecurrenceOptions>();
+  let matchedText = '';
+
   // Check for "every X days/weeks/months/years" pattern
   // Uses a regex with capturing groups to extract both the interval number and the time unit
   const intervalMatch = new RegExp(
@@ -111,11 +125,14 @@ export function applyIntervalRules(input: string, options: RecurrenceOptions): v
 
     // Set the interval
     options.interval = interval;
+    setProperties.add('interval');
 
-    // Always set the frequency based on the unit from the interval pattern
-    // This takes precedence over any previously set frequency
+    // Set the frequency based on the unit from the interval pattern
     options.freq = unitToFrequency[unit];
-    return; // Return early to avoid checking other patterns
+    setProperties.add('freq');
+    
+    matchedText = intervalMatch[0];
+    return createPatternResult(options, matchedText, setProperties);
   }
 
   // Check for "every other X" pattern
@@ -127,14 +144,42 @@ export function applyIntervalRules(input: string, options: RecurrenceOptions): v
 
   if (otherMatch) {
     options.interval = 2; // "Every other" means interval of 2
+    setProperties.add('interval');
 
     // Set frequency based on the matched unit
     const unit = otherMatch[1].toLowerCase();
     options.freq = unitToFrequency[unit];
+    setProperties.add('freq');
+    
+    matchedText = otherMatch[0];
+    return createPatternResult(options, matchedText, setProperties);
   }
 
-  // If no interval pattern was matched, leave options.interval as is
-  // (it should be initialized to 1 by default)
+  // If no interval pattern was matched, return null
+  return null;
+}
+
+/**
+ * Creates a standardized PatternResult object
+ */
+function createPatternResult(
+  options: RecurrenceOptions, 
+  matchedText: string,
+  setProperties: Set<keyof RecurrenceOptions>
+): PatternResult {
+  const metadata: PatternMatchMetadata = {
+    patternName: 'intervalPattern',
+    category: PATTERN_CATEGORIES.INTERVAL,
+    matchedText,
+    confidence: 0.9,
+    isPartial: true,
+    setProperties
+  };
+  
+  return {
+    options,
+    metadata
+  };
 }
 
 /**

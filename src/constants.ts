@@ -403,6 +403,44 @@ export const MONTH_NAME_VARIANTS = {
   'decem': MONTHS.DECEMBER
 };
 
+/**
+ * Month names and abbreviations used for pattern matching.
+ */
+export const MONTH_NAMES = {
+  // Full month names
+  JANUARY: 'january',
+  FEBRUARY: 'february',
+  MARCH: 'march',
+  APRIL: 'april',
+  MAY: 'may',
+  JUNE: 'june',
+  JULY: 'july',
+  AUGUST: 'august',
+  SEPTEMBER: 'september',
+  OCTOBER: 'october',
+  NOVEMBER: 'november',
+  DECEMBER: 'december',
+  
+  // Common abbreviations
+  JAN: 'jan',
+  FEB: 'feb',
+  MAR: 'mar',
+  APR: 'apr',
+  MAY_ABBR: 'may',  // Same as full name but needed for consistency
+  JUN: 'jun',
+  JUL: 'jul',
+  AUG: 'aug',
+  SEP: 'sep',
+  OCT: 'oct',
+  NOV: 'nov',
+  DEC: 'dec'
+} as const;
+
+/**
+ * Type definition for month names strings
+ */
+export type MonthString = typeof MONTH_NAMES[keyof typeof MONTH_NAMES];
+
 // Type definitions for constants to improve type safety
 
 /**
@@ -429,11 +467,6 @@ export type FrequencyTermString = typeof FREQUENCY_TERMS[keyof typeof FREQUENCY_
  * Type for ordinal term strings used in pattern matching.
  */
 export type OrdinalTermString = typeof ORDINAL_TERMS[keyof typeof ORDINAL_TERMS];
-
-/**
- * Type for month name strings used in pattern matching.
- */
-export type MonthString = typeof MONTHS[keyof typeof MONTHS];
 
 /**
  * Type for pattern category strings used for organizing patterns.

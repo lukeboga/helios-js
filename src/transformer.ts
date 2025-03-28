@@ -24,7 +24,7 @@ import { normalizeInput } from './normalizer';
 import { patternHandlers } from './patterns';
 import { asWeekdays } from './utils';
 import { splitPattern } from './patterns/splitter';
-import { combinePatternResults } from './patterns/combiner';
+import { combinePatternResults, mergeOptions } from './patterns/combiner';
 
 /**
  * Default configuration for the transformer
@@ -103,6 +103,13 @@ export function transformRecurrencePattern(
       
       // If we found multiple valid patterns, combine them
       if (patternResults.length > 1) {
+        // Ensure all pattern results have their setProperties initialized
+        patternResults.forEach(pattern => {
+          if (!pattern.metadata.setProperties) {
+            pattern.metadata.setProperties = new Set<keyof RecurrenceOptions>();
+          }
+        });
+        
         // Use the combiner to merge all pattern results
         const combinedOptions = combinePatternResults(patternResults);
         
@@ -151,7 +158,7 @@ function processPatternWithAdapter(pattern: string, config: TransformerConfig): 
   // Try each handler to see if it can process this pattern
   for (const handler of config.handlers) {
     // Save initial state to detect if handler made changes
-    const optionsBefore = JSON.stringify(options);
+    const optionsBefore = JSON.parse(JSON.stringify(options));
     
     // Apply the handler the traditional way
     // TypeScript doesn't know that our handlers actually support this signature
@@ -180,6 +187,29 @@ function processPatternWithAdapter(pattern: string, config: TransformerConfig): 
       optionsCopy.byweekday = options.byweekday;
     }
     
+    // Determine which properties were set by comparing with initial defaults
+    const defaultOptions = initializeOptions();
+    const setProperties = new Set<keyof RecurrenceOptions>();
+    
+    // Check each property in the options object
+    for (const key of Object.keys(options) as Array<keyof RecurrenceOptions>) {
+      // If the value is different from the default, it was set by the handler
+      const defaultValue = defaultOptions[key];
+      const currentValue = options[key];
+      
+      // Compare values, handling arrays specially
+      if (Array.isArray(currentValue)) {
+        // For arrays, check if they have items (non-empty arrays were set)
+        if (currentValue.length > 0) {
+          setProperties.add(key);
+        }
+      } 
+      // For non-array values, directly compare with default
+      else if (currentValue !== defaultValue) {
+        setProperties.add(key);
+      }
+    }
+    
     result = {
       options: optionsCopy,
       metadata: {
@@ -188,7 +218,7 @@ function processPatternWithAdapter(pattern: string, config: TransformerConfig): 
         matchedText: pattern,
         confidence: 0.8, // Default confidence
         isPartial: true, 
-        setProperties: new Set<keyof RecurrenceOptions>()
+        setProperties: setProperties
       }
     };
   }
@@ -209,15 +239,47 @@ function processTraditional(input: string, config: TransformerConfig): Transform
 
   // Track which patterns matched for debugging and metadata
   const matchedPatterns: string[] = [];
+  
+  // Track confidence and warnings
+  let confidence = 1.0;
+  const warnings: string[] = [];
 
   // Apply pattern handlers in order
   for (const handler of config.handlers) {
+    // Try using the new API first
+    try {
+      const result = (handler as any).apply(input);
+      
+      if (result) {
+        // This is a new-style handler that returned a PatternResult
+        matchedPatterns.push(handler.name);
+        
+        // Merge the options
+        mergeOptions(options, result.options);
+        
+        // Update confidence
+        confidence = Math.min(confidence, result.metadata.confidence || 1.0);
+        
+        // Add any warnings
+        if (result.metadata.warnings) {
+          warnings.push(...result.metadata.warnings);
+        }
+        
+        // If we're not applying all handlers, stop after the first match
+        if (!config.applyAll) {
+          break;
+        }
+      }
+      continue;
+    } catch (e) {
+      // Error or not implemented with the new API, fall back to the old approach
+    }
+    
+    // Fall back to the old approach
     // Save initial state to detect if handler made changes
     const optionsBefore = JSON.stringify(options);
 
     // Apply the handler the traditional way
-    // TypeScript doesn't know that our handlers actually support this signature
-    // but we know they do based on implementation
     (handler as any).apply(input, options);
 
     // Check if options were modified
@@ -241,6 +303,8 @@ function processTraditional(input: string, config: TransformerConfig): Transform
 
   // Add metadata
   result.matchedPatterns = matchedPatterns;
+  result.confidence = confidence;
+  result.warnings = warnings;
 
   return result;
 }

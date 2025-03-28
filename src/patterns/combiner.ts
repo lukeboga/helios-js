@@ -192,8 +192,15 @@ export function combinePatternResults(patternResults: PatternResult[]): Recurren
     
     // Find patterns that match this combiner's capabilities
     // We ask each combiner "can you handle this pattern?"
-    const matchingPatterns = sortedResults.filter(result => 
-      combiner.canCombine(result, sortedResults));
+    const matchingPatterns = sortedResults.filter(result => {
+      // Skip patterns with missing or malformed metadata
+      if (!result.metadata || !result.metadata.category || !result.metadata.setProperties) {
+        return false;
+      }
+      
+      // Check if this pattern can be combined using this combiner
+      return combiner.canCombine(result, sortedResults);
+    });
     
     // Only proceed if we have at least 2 patterns to combine
     if (matchingPatterns.length >= 2) {
@@ -472,9 +479,9 @@ export const dayWithDayCombiner: MultiPatternCombiner = {
   
   // This determines if the pattern can be combined using this combiner
   canCombine(pattern: PatternResult, _allPatterns: PatternResult[]): boolean {
-    // We only care if this is a day-of-week pattern
-    // The underscore in _allPatterns indicates we don't use this parameter
-    return pattern.metadata.category === PATTERN_CATEGORIES.DAY_OF_WEEK;
+    // We only care if this is a day-of-week pattern with byweekday property set
+    return pattern.metadata.category === PATTERN_CATEGORIES.DAY_OF_WEEK && 
+           (pattern.metadata.setProperties?.has('byweekday') || false);
   },
   
   // This performs the actual combination
@@ -537,8 +544,10 @@ export const frequencyWithDayCombiner: MultiPatternCombiner = {
   
   canCombine(pattern: PatternResult, allPatterns: PatternResult[]): boolean {
     // Check if this pattern is a frequency or day pattern
-    const isFrequency = pattern.metadata.category === PATTERN_CATEGORIES.FREQUENCY;
-    const isDay = pattern.metadata.category === PATTERN_CATEGORIES.DAY_OF_WEEK;
+    const isFrequency = pattern.metadata.category === PATTERN_CATEGORIES.FREQUENCY && 
+                        (pattern.metadata.setProperties?.has('freq') || false);
+    const isDay = pattern.metadata.category === PATTERN_CATEGORIES.DAY_OF_WEEK && 
+                  (pattern.metadata.setProperties?.has('byweekday') || false);
     
     // If it's neither frequency nor day, this combiner can't help
     if (!isFrequency && !isDay) {
@@ -550,8 +559,10 @@ export const frequencyWithDayCombiner: MultiPatternCombiner = {
     // If this is a day pattern, we need a frequency pattern
     return allPatterns.some(other => 
       other !== pattern && (
-        (isFrequency && other.metadata.category === PATTERN_CATEGORIES.DAY_OF_WEEK) ||
-        (isDay && other.metadata.category === PATTERN_CATEGORIES.FREQUENCY)
+        (isFrequency && other.metadata.category === PATTERN_CATEGORIES.DAY_OF_WEEK && 
+         (other.metadata.setProperties?.has('byweekday') || false)) ||
+        (isDay && other.metadata.category === PATTERN_CATEGORIES.FREQUENCY && 
+         (other.metadata.setProperties?.has('freq') || false))
       )
     );
   },
@@ -607,8 +618,10 @@ export const dayWithPositionCombiner: MultiPatternCombiner = {
   
   canCombine(pattern: PatternResult, allPatterns: PatternResult[]): boolean {
     // Check if this pattern is a day or position pattern
-    const isDay = pattern.metadata.category === PATTERN_CATEGORIES.DAY_OF_WEEK;
-    const isPosition = pattern.metadata.category === PATTERN_CATEGORIES.POSITION;
+    const isDay = pattern.metadata.category === PATTERN_CATEGORIES.DAY_OF_WEEK && 
+                  (pattern.metadata.setProperties?.has('byweekday') || false);
+    const isPosition = pattern.metadata.category === PATTERN_CATEGORIES.POSITION && 
+                       (pattern.metadata.setProperties?.has('bysetpos') || false);
     
     // If it's neither day nor position, this combiner can't help
     if (!isDay && !isPosition) {
@@ -620,8 +633,10 @@ export const dayWithPositionCombiner: MultiPatternCombiner = {
     // If this is a position pattern, we need a day pattern
     return allPatterns.some(other => 
       other !== pattern && (
-        (isDay && other.metadata.category === PATTERN_CATEGORIES.POSITION) ||
-        (isPosition && other.metadata.category === PATTERN_CATEGORIES.DAY_OF_WEEK)
+        (isDay && other.metadata.category === PATTERN_CATEGORIES.POSITION && 
+         (other.metadata.setProperties?.has('bysetpos') || false)) ||
+        (isPosition && other.metadata.category === PATTERN_CATEGORIES.DAY_OF_WEEK && 
+         (other.metadata.setProperties?.has('byweekday') || false))
       )
     );
   },
@@ -679,7 +694,8 @@ export const patternWithUntilCombiner: MultiPatternCombiner = {
   
   canCombine(pattern: PatternResult, allPatterns: PatternResult[]): boolean {
     // Check if this is an until date pattern
-    const isUntil = pattern.metadata.category === PATTERN_CATEGORIES.UNTIL_DATE;
+    const isUntil = pattern.metadata.category === PATTERN_CATEGORIES.UNTIL_DATE && 
+                    (pattern.metadata.setProperties?.has('until') || false);
     
     // For until patterns, we just need to verify there are other patterns to combine with
     // An until date on its own doesn't make sense
@@ -689,7 +705,9 @@ export const patternWithUntilCombiner: MultiPatternCombiner = {
     
     // For other patterns, check if there's an until pattern to combine with
     return allPatterns.some(other => 
-      other !== pattern && other.metadata.category === PATTERN_CATEGORIES.UNTIL_DATE
+      other !== pattern && 
+      other.metadata.category === PATTERN_CATEGORIES.UNTIL_DATE && 
+      (other.metadata.setProperties?.has('until') || false)
     );
   },
   
@@ -744,7 +762,8 @@ export const patternWithCountCombiner: MultiPatternCombiner = {
   
   canCombine(pattern: PatternResult, allPatterns: PatternResult[]): boolean {
     // Check if this is a count pattern
-    const isCount = pattern.metadata.category === PATTERN_CATEGORIES.COUNT;
+    const isCount = pattern.metadata.category === PATTERN_CATEGORIES.COUNT && 
+                    (pattern.metadata.setProperties?.has('count') || false);
     
     // For count patterns, we just need to verify there are other patterns to combine with
     // A count on its own doesn't make sense
@@ -754,7 +773,9 @@ export const patternWithCountCombiner: MultiPatternCombiner = {
     
     // For other patterns, check if there's a count pattern to combine with
     return allPatterns.some(other => 
-      other !== pattern && other.metadata.category === PATTERN_CATEGORIES.COUNT
+      other !== pattern && 
+      other.metadata.category === PATTERN_CATEGORIES.COUNT && 
+      (other.metadata.setProperties?.has('count') || false)
     );
   },
   
@@ -855,9 +876,9 @@ export function adaptToPatternCombiner(multiCombiner: MultiPatternCombiner): Pat
         isPartial: false,
         // Combine the set properties from both patterns
         setProperties: new Set([
-          ...(pattern1.metadata.setProperties || []),
-          ...(pattern2.metadata.setProperties || [])
-        ] as any)
+          ...(Array.from(pattern1.metadata.setProperties || [])),
+          ...(Array.from(pattern2.metadata.setProperties || []))
+        ] as Array<keyof RecurrenceOptions>)
       };
       
       // Return the combined result

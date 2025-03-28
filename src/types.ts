@@ -419,3 +419,11 @@ export interface TransformationResult extends RRuleOptions {
    */
   confidence?: number;
 }
+
+/**
+ * Mapping of synonyms to their standardized terms.
+ * Used for normalizing different expressions to a standard format.
+ */
+export interface SynonymMapping {
+  [synonym: string]: string;
+}

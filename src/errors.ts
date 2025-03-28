@@ -174,4 +174,19 @@ export class DependencyError extends HeliosError {
     super(`Missing dependency: ${dependency}${message ? ` - ${message}` : ''}`);
     this.name = 'DependencyError';
   }
+}
+
+/**
+ * Error thrown when an invalid month name is provided.
+ */
+export class InvalidMonthError extends Error {
+  /**
+   * Creates a new instance of InvalidMonthError.
+   * 
+   * @param month - The invalid month name that triggered the error
+   */
+  constructor(month: string) {
+    super(`Invalid month name: "${month}"`);
+    this.name = 'InvalidMonthError';
+  }
 } 

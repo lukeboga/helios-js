@@ -10,7 +10,7 @@
  */
 
 import { RRule } from 'rrule';
-import type { RecurrenceOptions } from '../types';
+import type { RecurrenceOptions, PatternResult, PatternMatchMetadata } from '../types';
 import { DAYS, SPECIAL_PATTERNS, PATTERN_PRIORITY, PATTERN_CATEGORIES } from '../constants';
 import { DAY_MAP, WEEKDAYS, WEEKEND_DAYS, extractDayNames } from './utils';
 import type { DayString } from '../constants';
@@ -22,10 +22,10 @@ export interface DayOfWeekPatternHandler {
   /**
    * Applies day of week pattern recognition to the input string
    * 
-   * @param input - Normalized recurrence pattern string  
-   * @param options - Options object to be updated with recognized patterns
+   * @param input - Normalized recurrence pattern string
+   * @returns PatternResult if a pattern was matched, null otherwise
    */
-  apply(input: string, options: RecurrenceOptions): void;
+  apply(input: string): PatternResult | null;
 
   /**
    * The priority of this pattern handler
@@ -50,11 +50,12 @@ export const dayOfWeekPatternHandler: DayOfWeekPatternHandler = {
   /**
    * Applies day of week pattern recognition to the input string
    * 
-   * @param input - Normalized recurrence pattern string  
-   * @param options - Options object to be updated with recognized patterns
+   * @param input - Normalized recurrence pattern string
+   * @returns PatternResult if a pattern was matched, null otherwise
    */
-  apply(input: string, options: RecurrenceOptions): void {
-    applyDayOfWeekRules(input, options);
+  apply(input: string): PatternResult | null {
+    const result = applyDayOfWeekRules(input);
+    return result;
   },
 
   /**
@@ -74,7 +75,7 @@ export const dayOfWeekPatternHandler: DayOfWeekPatternHandler = {
 };
 
 /**
- * Applies day of week transformation rules to the input string and updates the options object
+ * Applies day of week transformation rules to the input string
  * 
  * This function recognizes:
  * - Single day specifications ("every Monday")
@@ -85,36 +86,42 @@ export const dayOfWeekPatternHandler: DayOfWeekPatternHandler = {
  * if it hasn't been set or if it's compatible with day-of-week specifications.
  * 
  * @param input - Normalized recurrence pattern string
- * @param options - Options object to be updated with recognized patterns
+ * @returns PatternResult if a pattern was matched, null otherwise
  */
-export function applyDayOfWeekRules(input: string, options: RecurrenceOptions): void {
-  // Skip day of week processing if we've already established a MONTHLY or YEARLY frequency
-  // Day of week patterns shouldn't override these higher-level frequencies
-  if (options.freq === RRule.MONTHLY || options.freq === RRule.YEARLY) {
-    return;
-  }
-
-  // First handle special cases where we already have weekday definitions
-  if (Array.isArray(options.byweekday) && options.byweekday.length > 0) {
-    return;
-  }
-
-  // Check for special day groups first (these are handled as special cases)
+export function applyDayOfWeekRules(input: string): PatternResult | null {
+  // Initialize options
+  const options: RecurrenceOptions = {
+    freq: null,
+    interval: 1,
+    byweekday: null,
+    bymonthday: null,
+    bymonth: null
+  };
+  
+  // Track which properties are set
+  const setProperties = new Set<keyof RecurrenceOptions>();
+  let matchedText = '';
 
   // Weekday pattern (Monday-Friday)
-  if (new RegExp(`\\b${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.WEEKDAY}\\b`).test(input)) {
+  const weekdayMatch = new RegExp(`\\b${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.WEEKDAY}\\b`).exec(input);
+  if (weekdayMatch) {
     options.freq = RRule.WEEKLY;
-    // WEEKDAYS is already of type RRule.Weekday[], which matches our RecurrenceOptions.byweekday
     options.byweekday = WEEKDAYS;
-    return;
+    setProperties.add('freq');
+    setProperties.add('byweekday');
+    matchedText = weekdayMatch[0];
+    return createPatternResult(options, matchedText, setProperties);
   }
 
   // Weekend pattern (Saturday-Sunday)
-  if (new RegExp(`\\b${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.WEEKEND}\\b`).test(input)) {
+  const weekendMatch = new RegExp(`\\b${SPECIAL_PATTERNS.EVERY}\\s+${SPECIAL_PATTERNS.WEEKEND}\\b`).exec(input);
+  if (weekendMatch) {
     options.freq = RRule.WEEKLY;
-    // WEEKEND_DAYS is already of type RRule.Weekday[], which matches our RecurrenceOptions.byweekday
     options.byweekday = WEEKEND_DAYS;
-    return;
+    setProperties.add('freq');
+    setProperties.add('byweekday');
+    matchedText = weekendMatch[0];
+    return createPatternResult(options, matchedText, setProperties);
   }
 
   // Check for the common "Day X and Day Y" pattern
@@ -125,19 +132,20 @@ export function applyDayOfWeekRules(input: string, options: RecurrenceOptions): 
     'i'
   );
 
-  if (combinedDaysRegex.test(input)) {
+  const combinedDaysMatch = combinedDaysRegex.exec(input);
+  if (combinedDaysMatch) {
     // Extract all day names from the input
     const matchedDays = extractDayNames(input);
 
     if (matchedDays.length > 0) {
       // matchedDays is already of type RRule.Weekday[], which matches our RecurrenceOptions.byweekday
       options.byweekday = matchedDays;
-
-      // If frequency wasn't set, assume weekly
-      if (options.freq === null) {
-        options.freq = RRule.WEEKLY;
-      }
-      return;
+      options.freq = RRule.WEEKLY; // Assume weekly for day patterns
+      
+      setProperties.add('byweekday');
+      setProperties.add('freq');
+      matchedText = combinedDaysMatch[0];
+      return createPatternResult(options, matchedText, setProperties);
     }
   }
 
@@ -149,10 +157,12 @@ export function applyDayOfWeekRules(input: string, options: RecurrenceOptions): 
 
   let dayMatch;
   const daysFound: RRule.Weekday[] = [];
+  let fullMatchText = '';
 
   // Find all occurrences of "every [day]" patterns
   while ((dayMatch = specificDayRegex.exec(input)) !== null) {
     const day = dayMatch[1].toLowerCase();
+    fullMatchText += (fullMatchText ? ', ' : '') + dayMatch[0];
     
     // Check if the day string is a valid key in our day mapping
     if (isValidDayName(day)) {
@@ -165,12 +175,39 @@ export function applyDayOfWeekRules(input: string, options: RecurrenceOptions): 
   if (daysFound.length > 0) {
     // daysFound is already of type RRule.Weekday[], which matches our RecurrenceOptions.byweekday
     options.byweekday = daysFound;
-
-    // If frequency wasn't set, assume weekly
-    if (options.freq === null) {
-      options.freq = RRule.WEEKLY;
-    }
+    options.freq = RRule.WEEKLY; // Assume weekly for day patterns
+    
+    setProperties.add('byweekday');
+    setProperties.add('freq');
+    matchedText = fullMatchText;
+    return createPatternResult(options, matchedText, setProperties);
   }
+
+  // If no day of week pattern was matched, return null
+  return null;
+}
+
+/**
+ * Creates a standardized PatternResult object
+ */
+function createPatternResult(
+  options: RecurrenceOptions, 
+  matchedText: string,
+  setProperties: Set<keyof RecurrenceOptions>
+): PatternResult {
+  const metadata: PatternMatchMetadata = {
+    patternName: 'dayOfWeekPattern',
+    category: PATTERN_CATEGORIES.DAY_OF_WEEK,
+    matchedText,
+    confidence: 0.9,
+    isPartial: true,
+    setProperties
+  };
+  
+  return {
+    options,
+    metadata
+  };
 }
 
 /**

@@ -13,6 +13,7 @@ import { frequencyPatternHandler } from './frequency';
 import { intervalPatternHandler } from './interval';
 import { dayOfWeekPatternHandler } from './dayOfWeek';
 import { dayOfMonthPatternHandler } from './dayOfMonth';
+import { untilDatePatternHandler } from './untilDate';
 import type { PatternHandler } from '../types';
 import { PATTERN_PRIORITY } from '../constants';
 
@@ -21,7 +22,8 @@ export {
   frequencyPatternHandler, 
   intervalPatternHandler, 
   dayOfWeekPatternHandler,
-  dayOfMonthPatternHandler
+  dayOfMonthPatternHandler,
+  untilDatePatternHandler
 };
 
 // Export utility functions
@@ -45,7 +47,8 @@ export const patternHandlers: PatternHandler[] = [
   intervalPatternHandler,
   frequencyPatternHandler,
   dayOfWeekPatternHandler,
-  dayOfMonthPatternHandler
+  dayOfMonthPatternHandler,
+  untilDatePatternHandler
 ].sort((a, b) => {
   // Sort by priority (higher number comes first)
   return b.priority - a.priority;

@@ -360,7 +360,7 @@ function splitOnConjunctions(text: string): string[] {
   const conjunctionPattern = new RegExp(`\\s+(${conjunctionTerms.join('|')})\\s+`, 'i');
   
   // Handle comma separately as it needs different spacing rules
-  let patterns: string[] = [];
+  let segments: string[] = [];
   
   // First split on comma+space
   const commaSplit = text.split(/\s*,\s*/);
@@ -370,11 +370,37 @@ function splitOnConjunctions(text: string): string[] {
     if (segment.trim().length === 0) continue;
     
     // Split on other conjunctions
-    const subPatterns = segment.split(conjunctionPattern);
-    patterns.push(...subPatterns);
+    // Instead of just splitting and including the conjunction terms,
+    // we use a more sophisticated approach that preserves the intent
+    if (conjunctionPattern.test(segment)) {
+      // Split the segment but keep track of where we are
+      let lastIndex = 0;
+      let match;
+      const conjunctionRegex = new RegExp(conjunctionPattern.source, 'gi');
+      
+      while ((match = conjunctionRegex.exec(segment)) !== null) {
+        // Add the part before this conjunction
+        const beforeConjunction = segment.substring(lastIndex, match.index).trim();
+        if (beforeConjunction) {
+          segments.push(beforeConjunction);
+        }
+        
+        // Update lastIndex to skip over the conjunction
+        lastIndex = match.index + match[0].length;
+      }
+      
+      // Add the last part after the final conjunction
+      const afterLastConjunction = segment.substring(lastIndex).trim();
+      if (afterLastConjunction) {
+        segments.push(afterLastConjunction);
+      }
+    } else {
+      // No conjunctions in this segment, add it as is
+      segments.push(segment);
+    }
   }
   
-  return patterns;
+  return segments;
 }
 
 /**
