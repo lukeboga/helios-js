@@ -2,14 +2,12 @@
  * Test Suite for CompromiseJS Integration
  * 
  * This file contains basic tests for the CompromiseJS-based pattern recognition.
- * It compares the results of the new processor against expected values and the
- * existing transformer implementation.
+ * It compares the results of the new processor against expected values.
  */
 
 import { describe, expect, it } from 'vitest';
 import { RRule } from 'rrule';
-import { processRecurrencePattern } from '../src/processor';
-import { transformRecurrencePattern } from '../src/transformer';
+import { processRecurrencePattern } from '../../../src/processor';
 
 // Sample patterns to test
 const patterns = [
@@ -191,53 +189,6 @@ describe('CompromiseJS Pattern Recognition', () => {
       }
     });
   });
-  
-  describe('Comparison with transformer', () => {
-    // Test each pattern and compare results with the existing transformer
-    patterns.forEach(pattern => {
-      it(`should match transformer output for "${pattern}"`, () => {
-        const newResult = processRecurrencePattern(pattern);
-        const oldResult = transformRecurrencePattern(pattern);
-        
-        // For known issue patterns, skip the comparison
-        if (knownIssuePatterns.includes(pattern)) {
-          console.log(`Skipping comparison for known issue pattern: "${pattern}"`);
-          return;
-        }
-        
-        // Check if new implementation returns null
-        if (newResult === null) {
-          console.log(`Pattern not supported by new implementation: "${pattern}"`);
-          return;
-        }
-        
-        // Compare core properties
-        expect(newResult.freq).toEqual(oldResult.freq);
-        expect(newResult.interval).toEqual(oldResult.interval);
-        
-        // Compare byweekday (if set)
-        if (oldResult.byweekday !== null && newResult.byweekday !== null) {
-          // Convert to arrays
-          const oldArray = Array.isArray(oldResult.byweekday) ? oldResult.byweekday : [oldResult.byweekday];
-          const newArray = Array.isArray(newResult.byweekday) ? newResult.byweekday : [newResult.byweekday];
-          
-          // Sort arrays for consistent comparison
-          const sortedOld = oldArray.map(d => d.toString()).sort();
-          const sortedNew = newArray.map(d => d.toString()).sort();
-          
-          expect(sortedNew).toEqual(sortedOld);
-        }
-        
-        // Log any differences for debugging
-        if (
-          newResult.freq !== oldResult.freq ||
-          newResult.interval !== oldResult.interval
-        ) {
-          console.log(`Pattern "${pattern}" has differences:`);
-          console.log('New:', newResult);
-          console.log('Old:', oldResult);
-        }
-      });
-    });
-  });
+
+  // Add more specific test cases for each pattern type as needed
 }); 

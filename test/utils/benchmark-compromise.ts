@@ -5,7 +5,7 @@
  */
 
 import { performance } from 'perf_hooks';
-import { processRecurrencePattern } from '../src/processor';
+import { processRecurrencePattern } from '../../src/processor';
 
 // Test patterns for benchmarking
 const simplePatterns = [

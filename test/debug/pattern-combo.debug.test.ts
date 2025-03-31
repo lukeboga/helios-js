@@ -1,13 +1,12 @@
 /**
- * Debug tests for pattern splitting and combination
+ * Debug tests for pattern combinations
  */
 
-import { splitPattern } from '../../src/patterns/splitter';
-import { transformRecurrencePattern } from '../../src/transformer';
 import { RRule } from 'rrule';
+import { processRecurrencePattern } from '../../src/processor';
 import { describe, it, expect } from 'vitest';
 
-describe('Pattern Splitting and Combination Debug', () => {
+describe('Pattern Combination Debug', () => {
   // Test cases for complex patterns
   const testCases = [
     "every monday and friday",
@@ -22,43 +21,32 @@ describe('Pattern Splitting and Combination Debug', () => {
     "1st of January and July", // Specific months not yet supported
   ];
 
-  describe('Pattern Splitting', () => {
+  describe('Pattern Processing', () => {
     for (const [index, testCase] of testCases.entries()) {
-      it(`splits pattern "${testCase}"`, () => {
-        const result = splitPattern(testCase);
-        console.log(`Test ${index + 1}: "${testCase}"`);
-        console.log("- Split patterns:", result.patterns);
-        console.log("- Protected phrases:", result.protectedPhraseMap.size > 0 ? 
-          Array.from(result.protectedPhraseMap.entries()) : "None");
-        
-        // Basic assertion to ensure we're getting some patterns
-        expect(result.patterns.length).toBeGreaterThan(0);
-      });
-    }
-  });
-
-  describe('Full Transformation', () => {
-    for (const [index, testCase] of testCases.entries()) {
-      it(`transforms pattern "${testCase}"`, () => {
+      it(`processes pattern "${testCase}"`, () => {
         try {
-          const result = transformRecurrencePattern(testCase);
+          const result = processRecurrencePattern(testCase);
           
           // Format the result in a more readable way
           const formatted = {
-            frequency: getFrequencyName(result.freq),
-            interval: result.interval || 1,
-            byweekday: formatWeekdays(result.byweekday),
-            bymonthday: result.bymonthday || [],
-            bymonth: result.bymonth || [],
-            until: result.until ? formatDate(result.until as Date) : undefined,
-            matchedPatterns: result.matchedPatterns || []
+            frequency: result ? getFrequencyName(result.freq as number) : "Not recognized",
+            interval: result?.interval || 1,
+            byweekday: formatWeekdays(result?.byweekday),
+            bymonthday: result?.bymonthday || [],
+            bymonth: result?.bymonth || [],
+            until: result?.until ? formatDate(result.until as Date) : undefined,
+            confidence: result?.confidence || 0
           };
           
           console.log(`Test ${index + 1}: "${testCase}"`);
-          console.log("- Transformation result:", formatted);
+          console.log("- Processing result:", formatted);
           
-          // Basic assertion to ensure transformation is working
-          expect(result.freq).toBeDefined();
+          // Basic assertion for the test
+          if (result === null) {
+            console.log("- Pattern not recognized");
+          } else {
+            expect(result.freq).toBeDefined();
+          }
         } catch (error) {
           console.log(`Test ${index + 1}: "${testCase}"`);
           console.log("- Error:", (error as Error).message);
@@ -89,6 +77,10 @@ function formatWeekdays(weekdays: any): string[] {
   if (!weekdays) return [];
   
   const dayNames = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+  
+  if (!Array.isArray(weekdays)) {
+    weekdays = [weekdays];
+  }
   
   return weekdays.map((day: any) => {
     if (typeof day === 'number') {
