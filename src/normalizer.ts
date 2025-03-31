@@ -254,19 +254,25 @@ export function normalizeDayNames(input: string): string {
  * // returns "every 2 weeks on Monday"
  */
 export function applyTermSynonyms(input: string): string {
-  let result = input.toLowerCase();
-  
-  // Apply synonyms from longest to shortest to avoid partial matches
-  const synonyms = Object.entries(TERM_SYNONYMS)
-    .sort(([a], [b]) => b.length - a.length);
-  
-  for (const [term, replacement] of synonyms) {
-    // Use word boundary to avoid partial matches
-    const regex = new RegExp(`\\b${term}\\b`, 'gi');
-    result = result.replace(regex, replacement);
+  // First try the pattern utils version which has more sophisticated handling
+  try {
+    return applySynonyms(input);
+  } catch (e) {
+    // Fallback to simpler implementation if that fails
+    let result = input.toLowerCase();
+    
+    // Apply synonyms from longest to shortest to avoid partial matches
+    const synonyms = Object.entries(TERM_SYNONYMS)
+      .sort(([a], [b]) => b.length - a.length);
+    
+    for (const [term, replacement] of synonyms) {
+      // Use word boundary to avoid partial matches
+      const regex = new RegExp(`\\b${term}\\b`, 'gi');
+      result = result.replace(regex, replacement);
+    }
+    
+    return result;
   }
-  
-  return result;
 }
 
 /**

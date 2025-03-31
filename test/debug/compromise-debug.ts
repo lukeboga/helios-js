@@ -46,7 +46,10 @@ function formatForDisplay(value: any): string {
     return '[' + value.map(formatForDisplay).join(', ') + ']';
   }
   
-  if (value instanceof RRule.Weekday) {
+  // Check if the value is a weekday object by looking for toString and n properties
+  if (value && typeof value === 'object' && 
+      typeof value.toString === 'function' && 
+      'n' in value && typeof value.n === 'number') {
     // Handle weekday objects specially
     return `RRule.${value.toString().toUpperCase()}`;
   }

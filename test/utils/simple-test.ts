@@ -4,8 +4,8 @@
  * This tests the natural language to RRule conversion with various patterns
  */
 import { RRule } from 'rrule';
-import { naturalLanguageToRRule } from '../src/index';
-import type { TransformerConfig } from '../src/types';
+import { naturalLanguageToRRule } from '../../src/index';
+import type { RecurrenceProcessorOptions } from '../../src/processor';
 
 // List of test cases - natural language to expected results
 const testPatterns = [
@@ -58,8 +58,15 @@ for (const input of testPatterns) {
       startDate,
       input,
       // Cast the config to the proper type
-      { correctMisspellings: true } as unknown as Partial<TransformerConfig>
+      { correctMisspellings: true } as Partial<RecurrenceProcessorOptions>
     );
+    
+    if (options === null) {
+      console.log(`Input: "${input}"`);
+      console.log(`Could not parse pattern`);
+      console.log('\n--------------------------------------------------\n');
+      continue;
+    }
     
     // Create RRule instance with proper type conversion
     const rruleOptions: RRule.Options = {

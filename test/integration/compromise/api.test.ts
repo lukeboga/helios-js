@@ -12,7 +12,7 @@ import {
   createRRule, 
   validatePattern, 
   suggestPatternCorrections 
-} from '../../../src/index';
+} from '../src/index';
 
 describe('CompromiseJS Public API Integration', () => {
   // Set up test dates

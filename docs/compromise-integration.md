@@ -142,7 +142,7 @@ const monthlyOptions = processRecurrencePattern('1st and 15th of each month');
 The implementation includes several performance optimizations:
 
 1. **Lazy Initialization**: CompromiseJS is only initialized when needed
-2. **Fast Paths**: Simple patterns like "daily" are optimized with simple checks for minimal overhead
+2. **Fast Paths**: Simple patterns like "daily" use regex for minimal overhead
 3. **Result Caching**: Results are cached to avoid reprocessing identical patterns
 
 ## Troubleshooting
