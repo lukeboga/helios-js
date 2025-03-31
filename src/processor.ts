@@ -43,6 +43,8 @@ export interface RecurrenceProcessorOptions {
   forceHandlers?: string[];
   /** Default options to apply */
   defaults?: Partial<RecurrenceOptions>;
+  /** Whether to correct misspellings */
+  correctMisspellings?: boolean;
 }
 
 /**
@@ -58,22 +60,54 @@ function trySimplePatterns(pattern: string): RecurrenceOptions | null {
   
   // Simple daily pattern
   if (/^daily$/.test(lowerPattern)) {
-    return { freq: RRule.DAILY, interval: 1, confidence: 1.0 };
+    return { 
+      freq: RRule.DAILY, 
+      interval: 1, 
+      confidence: 1.0,
+      byweekday: null,
+      bymonthday: null,
+      bymonth: null,
+      until: null
+    };
   }
   
   // Simple weekly pattern
   if (/^weekly$/.test(lowerPattern)) {
-    return { freq: RRule.WEEKLY, interval: 1, confidence: 1.0 };
+    return { 
+      freq: RRule.WEEKLY, 
+      interval: 1, 
+      confidence: 1.0,
+      byweekday: null,
+      bymonthday: null,
+      bymonth: null,
+      until: null 
+    };
   }
   
   // Simple monthly pattern
   if (/^monthly$/.test(lowerPattern)) {
-    return { freq: RRule.MONTHLY, interval: 1, confidence: 1.0 };
+    return { 
+      freq: RRule.MONTHLY, 
+      interval: 1, 
+      confidence: 1.0,
+      byweekday: null,
+      bymonthday: null,
+      bymonth: null,
+      until: null 
+    };
   }
   
   // Simple yearly pattern
   if (/^yearly$|^annually$/.test(lowerPattern)) {
-    return { freq: RRule.YEARLY, interval: 1, confidence: 1.0 };
+    return { 
+      freq: RRule.YEARLY, 
+      interval: 1, 
+      confidence: 1.0,
+      byweekday: null,
+      bymonthday: null,
+      bymonth: null,
+      until: null 
+    };
   }
   
   // No match with simple patterns
@@ -121,7 +155,7 @@ export function processRecurrencePattern(
   pattern: string,
   processorOptions: RecurrenceProcessorOptions = {}
 ): RecurrenceOptions | null {
-  const { useCache = true, defaults, forceHandlers } = processorOptions;
+  const { useCache = true, defaults, forceHandlers, correctMisspellings = true } = processorOptions;
   
   // Check cache first if enabled
   if (useCache && patternCache.has(pattern)) {
@@ -130,7 +164,13 @@ export function processRecurrencePattern(
   
   // Start with empty options
   const options: RecurrenceOptions = {
-    confidence: 0
+    confidence: 0,
+    freq: null,
+    interval: 0,
+    byweekday: null,
+    bymonthday: null,
+    bymonth: null,
+    until: null
   };
   
   // Try simple patterns first for performance
@@ -145,7 +185,7 @@ export function processRecurrencePattern(
   }
   
   // Setup CompromiseJS and get document
-  const doc = getDocument(pattern);
+  const doc = getDocument(pattern, { correctMisspellings });
   
   // Apply pattern handlers in sequence
   let matchFound = false;

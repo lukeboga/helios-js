@@ -139,15 +139,26 @@ export function setupCompromise(): void {
 
 /**
  * Gets a normalized CompromiseJS document for the input text
- * Ensures the CompromiseJS setup is initialized
+ * Ensures the CompromiseJS setup is initialized and applies normalization
  * 
  * @param text - Input text to process
+ * @param options - Optional processing options
  * @returns CompromiseJS document
  */
-export function getDocument(text: string): any {
+export function getDocument(text: string, options?: { correctMisspellings?: boolean }): any {
   // Ensure CompromiseJS is set up
   setupCompromise();
   
+  // Import normalizeInput here to avoid circular dependencies
+  const { normalizeInput } = require('../normalizer');
+  
+  // Apply normalization with spelling correction if enabled
+  const normalizedText = normalizeInput(text, { 
+    correctMisspellings: options?.correctMisspellings !== false,
+    normalizeDayNames: true,
+    applySynonyms: true
+  });
+  
   // Return a processed document
-  return nlp(text);
+  return nlp(normalizedText);
 } 

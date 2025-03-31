@@ -344,6 +344,68 @@ Tests run automatically in CI/CD pipelines:
 2. **Main Branch**: Tests run on every commit to the main branch
 3. **Failed Tests**: PRs with failing tests cannot be merged
 
+## Testing Misspelling Correction
+
+HeliosJS includes specialized tests for misspelling correction that verify the system's ability to handle common typos and spelling variations in natural language inputs.
+
+### Misspelling Test Script
+
+Located at `test/debug/misspelling-correction.ts`, this script tests the system's ability to correct misspellings in recurring patterns:
+
+```bash
+npm run test:misspellings
+```
+
+### What's Tested
+
+The misspelling correction tests verify:
+
+1. **Day Name Misspellings**: Common misspellings of weekdays (e.g., "mondey", "tuseday", "wednessday")
+2. **Month Name Misspellings**: Variations of month names (e.g., "janurary", "feburary")
+3. **Frequency Term Misspellings**: Misspelled frequency terms (e.g., "dayly", "wekly", "monthy")
+4. **Special Term Misspellings**: Common variants of special terms (e.g., "evrey", "eech", "untill")
+5. **Combined Pattern Misspellings**: Patterns with multiple misspellings (e.g., "evrey weekdys")
+
+### Test Structure
+
+The misspelling correction test:
+
+1. Defines a set of test patterns with common misspellings
+2. Processes each pattern using the HeliosJS processor with misspelling correction enabled
+3. Verifies that the pattern is correctly interpreted despite misspellings
+4. Shows the next occurrences generated from the corrected pattern
+
+### Adding New Misspelling Tests
+
+When expanding the misspelling dictionaries:
+
+1. Add new test patterns to `test/debug/misspelling-correction.ts`
+2. Add the corresponding misspellings to the appropriate dictionaries in `src/constants.ts`
+3. Run the tests to verify corrections work as expected
+
+Example test pattern addition:
+
+```typescript
+const patterns = [
+  // Existing test patterns
+  "every mondey",
+  "every tuseday",
+  
+  // New test pattern
+  "every secound tusday of the monthy",
+];
+```
+
+### Interpreting Test Results
+
+The test output shows:
+- Whether the pattern was successfully processed
+- The confidence level of the interpretation
+- The extracted parameters (frequency, interval, weekdays)
+- The next occurrences based on the corrected pattern
+
+Successful tests should show high confidence levels (0.90+) and correctly generate next occurrences.
+
 ## Conclusion
 
 Testing is a critical part of the HeliosJS development process. Following these guidelines ensures that the library remains reliable, maintainable, and well-documented.

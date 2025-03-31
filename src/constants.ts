@@ -297,47 +297,128 @@ export const TERM_SYNONYMS = {
   'each day': 'daily',
   'once a day': 'daily',
   'once daily': 'daily',
+  'dayly': 'daily',
+  'dayli': 'daily',
+  'daly': 'daily',
+  'dialy': 'daily',
+  
   'each week': 'weekly',
   'once a week': 'weekly',
   'once weekly': 'weekly',
+  'weekley': 'weekly',
+  'wekly': 'weekly',
+  'weekle': 'weekly',
+  'weakly': 'weekly',
+  
   'each month': 'monthly',
   'once a month': 'monthly',
   'once monthly': 'monthly',
+  'monthley': 'monthly',
+  'monthely': 'monthly',
+  'monthy': 'monthly',
+  'montly': 'monthly',
+  
   'each year': 'yearly',
   'once a year': 'yearly',
   'once yearly': 'yearly',
   'annual': 'yearly',
   'annually': 'yearly',
+  'yeerly': 'yearly',
+  'yearley': 'yearly',
+  'yeary': 'yearly',
+  'annualy': 'yearly',
+  'anually': 'yearly',
 
   // Special pattern synonyms
   'all': 'every',
   'each': 'every',
   'any': 'every',
+  'evry': 'every',
+  'evrery': 'every',
+  'evrey': 'every',
+  'avery': 'every',
+  'ever': 'every',
+  'eatch': 'each',
+  'eech': 'each',
+  
   'work day': 'weekday',
   'work days': 'weekday',
   'workday': 'weekday',
   'workdays': 'weekday',
   'business day': 'weekday',
   'business days': 'weekday',
+  'buisness day': 'weekday',
+  'buisness days': 'weekday',
   'week day': 'weekday',
   'week days': 'weekday',
+  'weekdys': 'weekday',
+  'weekdais': 'weekday',
+  
   'week end': 'weekend',
   'week ends': 'weekend',
   'weekends': 'weekend',
+  'weeknds': 'weekend',
+  'wekend': 'weekend',
+  'weekand': 'weekend',
 
   // Interval synonyms
   'alternate': 'other',
   'alternating': 'other',
+  'alternit': 'other',
+  'everyother': 'every other',
+  'evry other': 'every other',
+  'every secound': 'every second',
+  'every second': 'every other',
+  
   'bi-weekly': 'every 2 weeks',
   'biweekly': 'every 2 weeks',
+  'bi weekly': 'every 2 weeks',
+  'biweekley': 'every 2 weeks',
+  'bi-weekley': 'every 2 weeks',
+  'bi-wekly': 'every 2 weeks',
+  'biweely': 'every 2 weeks',
+  
   'fortnightly': 'every 2 weeks',
+  'fortnightley': 'every 2 weeks',
+  'fort nightly': 'every 2 weeks',
+  'fortnight': 'every 2 weeks',
+  
   'bi-monthly': 'every 2 months',
   'bimonthly': 'every 2 months',
+  'bi monthly': 'every 2 months',
+  'bi-monthley': 'every 2 months',
+  'bimonthley': 'every 2 months',
+  
   'quarterly': 'every 3 months',
+  'quartely': 'every 3 months',
+  'quaterly': 'every 3 months',
+  'quater': 'every 3 months',
+  
   'bi-annual': 'every 6 months',
   'biannual': 'every 6 months',
+  'bi annual': 'every 6 months',
+  'bi-anual': 'every 6 months',
+  'bianual': 'every 6 months',
+  
   'semi-annual': 'every 6 months',
-  'semiannual': 'every 6 months'
+  'semiannual': 'every 6 months',
+  'semi annual': 'every 6 months',
+  'semi-anual': 'every 6 months',
+  'semianual': 'every 6 months',
+  
+  // Time and date terminologies
+  'untill': 'until',
+  'til': 'until',
+  'till': 'until',
+  'untl': 'until',
+  
+  'begining': 'beginning',
+  'begining of': 'beginning of',
+  'begining of month': 'beginning of month',
+  
+  'end of': 'ending',
+  'end of month': 'ending of month',
+  'last of month': 'ending of month'
 };
 
 /**
@@ -349,12 +430,22 @@ export const DAY_NAME_VARIANTS = {
   'mondays': DAYS.MONDAY,
   'mondey': DAYS.MONDAY,
   'mondy': DAYS.MONDAY,
+  'mondai': DAYS.MONDAY,
+  'munday': DAYS.MONDAY,
+  'moonday': DAYS.MONDAY,
+  'mon': DAYS.MONDAY,
+  'monda': DAYS.MONDAY,
 
   // Tuesday variants
   'tuesdays': DAYS.TUESDAY,
   'tues': DAYS.TUESDAY,
   'tusday': DAYS.TUESDAY,
   'tuseday': DAYS.TUESDAY,
+  'tursday': DAYS.TUESDAY,
+  'twosday': DAYS.TUESDAY,
+  'teusday': DAYS.TUESDAY,
+  'teus': DAYS.TUESDAY,
+  'tue': DAYS.TUESDAY,
 
   // Wednesday variants
   'wednesdays': DAYS.WEDNESDAY,
@@ -362,28 +453,52 @@ export const DAY_NAME_VARIANTS = {
   'wednes': DAYS.WEDNESDAY,
   'wedness': DAYS.WEDNESDAY,
   'wendsday': DAYS.WEDNESDAY,
+  'wensday': DAYS.WEDNESDAY,
+  'wendesday': DAYS.WEDNESDAY,
+  'wenesday': DAYS.WEDNESDAY,
+  'wednessday': DAYS.WEDNESDAY,
+  'wed': DAYS.WEDNESDAY,
+  'wedneday': DAYS.WEDNESDAY,
 
   // Thursday variants
   'thursdays': DAYS.THURSDAY,
   'thurs': DAYS.THURSDAY,
   'thur': DAYS.THURSDAY,
   'thrusday': DAYS.THURSDAY,
+  'thurday': DAYS.THURSDAY,
+  'thurdsay': DAYS.THURSDAY,
+  'thersday': DAYS.THURSDAY,
+  'thu': DAYS.THURSDAY,
+  'thus': DAYS.THURSDAY,
 
   // Friday variants
   'fridays': DAYS.FRIDAY,
   'friady': DAYS.FRIDAY,
   'fridy': DAYS.FRIDAY,
+  'frday': DAYS.FRIDAY,
+  'fri': DAYS.FRIDAY,
+  'firday': DAYS.FRIDAY,
+  'friiday': DAYS.FRIDAY,
 
   // Saturday variants
   'saturdays': DAYS.SATURDAY,
   'sat': DAYS.SATURDAY,
   'satur': DAYS.SATURDAY,
   'saterday': DAYS.SATURDAY,
+  'satday': DAYS.SATURDAY,
+  'satuday': DAYS.SATURDAY,
+  'saterdy': DAYS.SATURDAY,
+  'satarday': DAYS.SATURDAY,
+  'saturaday': DAYS.SATURDAY,
 
   // Sunday variants
   'sundays': DAYS.SUNDAY,
   'sun': DAYS.SUNDAY,
-  'suday': DAYS.SUNDAY
+  'suday': DAYS.SUNDAY,
+  'sonday': DAYS.SUNDAY,
+  'sund': DAYS.SUNDAY,
+  'sunda': DAYS.SUNDAY,
+  'sundy': DAYS.SUNDAY
 };
 
 /**
@@ -395,51 +510,96 @@ export const MONTH_NAME_VARIANTS = {
   'jan': MONTHS.JANUARY,
   'janurary': MONTHS.JANUARY,
   'janaury': MONTHS.JANUARY,
+  'janury': MONTHS.JANUARY,
+  'janu': MONTHS.JANUARY,
+  'januray': MONTHS.JANUARY,
+  'janary': MONTHS.JANUARY,
 
   // February variants
   'feb': MONTHS.FEBRUARY,
   'feburary': MONTHS.FEBRUARY,
   'febu': MONTHS.FEBRUARY,
+  'febuary': MONTHS.FEBRUARY,
+  'febrary': MONTHS.FEBRUARY,
+  'febraury': MONTHS.FEBRUARY,
+  'febury': MONTHS.FEBRUARY,
 
   // March variants
   'mar': MONTHS.MARCH,
   'mch': MONTHS.MARCH,
+  'mrch': MONTHS.MARCH,
+  'marh': MONTHS.MARCH,
+  'marhc': MONTHS.MARCH,
 
   // April variants
   'apr': MONTHS.APRIL,
   'apl': MONTHS.APRIL,
+  'aprl': MONTHS.APRIL,
+  'apil': MONTHS.APRIL,
+  'arpil': MONTHS.APRIL,
+  'appril': MONTHS.APRIL,
 
   // May has fewer variants
   'may': MONTHS.MAY,
+  'may.': MONTHS.MAY,
 
   // June variants
   'jun': MONTHS.JUNE,
   'jn': MONTHS.JUNE,
+  'jne': MONTHS.JUNE,
+  'jun.': MONTHS.JUNE,
+  'juen': MONTHS.JUNE,
 
   // July variants
   'jul': MONTHS.JULY,
   'jl': MONTHS.JULY,
+  'jly': MONTHS.JULY,
+  'jul.': MONTHS.JULY,
+  'jule': MONTHS.JULY,
+  'juley': MONTHS.JULY,
 
   // August variants
   'aug': MONTHS.AUGUST,
   'ag': MONTHS.AUGUST,
+  'aug.': MONTHS.AUGUST,
+  'augst': MONTHS.AUGUST,
+  'augus': MONTHS.AUGUST,
+  'agust': MONTHS.AUGUST,
 
   // September variants
   'sep': MONTHS.SEPTEMBER,
   'sept': MONTHS.SEPTEMBER,
   'septem': MONTHS.SEPTEMBER,
+  'sep.': MONTHS.SEPTEMBER,
+  'sept.': MONTHS.SEPTEMBER,
+  'septmber': MONTHS.SEPTEMBER,
+  'septembr': MONTHS.SEPTEMBER,
+  'setember': MONTHS.SEPTEMBER,
 
   // October variants
   'oct': MONTHS.OCTOBER,
   'octo': MONTHS.OCTOBER,
+  'oct.': MONTHS.OCTOBER,
+  'octber': MONTHS.OCTOBER,
+  'octobr': MONTHS.OCTOBER,
+  'ocotber': MONTHS.OCTOBER,
 
   // November variants
   'nov': MONTHS.NOVEMBER,
   'novem': MONTHS.NOVEMBER,
+  'nov.': MONTHS.NOVEMBER,
+  'novmber': MONTHS.NOVEMBER,
+  'novembr': MONTHS.NOVEMBER,
+  'noveber': MONTHS.NOVEMBER,
 
   // December variants
   'dec': MONTHS.DECEMBER,
-  'decem': MONTHS.DECEMBER
+  'decem': MONTHS.DECEMBER,
+  'dec.': MONTHS.DECEMBER,
+  'decmber': MONTHS.DECEMBER,
+  'decembr': MONTHS.DECEMBER,
+  'deceber': MONTHS.DECEMBER,
+  'descember': MONTHS.DECEMBER
 };
 
 /**

@@ -19,6 +19,7 @@
     "fuzzy-test": "node -r esbuild-register test/utils/fuzzy-match.test.ts",
     "benchmark": "node -r esbuild-register test/utils/benchmark-compromise.ts",
     "debug:compromise": "node -r esbuild-register test/debug/compromise-debug.ts",
+    "test:misspellings": "node -r esbuild-register test/debug/misspelling-correction.ts",
     "ts-node": "node --loader ts-node/esm"
   },
   "keywords": [

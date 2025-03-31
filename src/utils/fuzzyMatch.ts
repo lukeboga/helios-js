@@ -22,7 +22,7 @@ import { distance, closest } from 'fastest-levenshtein';
  * Tests if two words are similar enough to be considered a match using string similarity.
  * 
  * This function:
- * 1. Computes a similarity score between 0 and 1
+ * 1. Computes a similarity score based on Levenshtein distance
  * 2. Uses a dynamic threshold based on word length (more lenient for short words)
  * 3. Skips comparing very short words or words with significant length differences
  * 
@@ -79,42 +79,13 @@ export function fuzzyMatchWord(
   const w1 = word1.toLowerCase();
   const w2 = word2.toLowerCase();
   
-  // Calculate similarity using two different approaches
+  // Calculate Levenshtein distance using fastest-levenshtein
+  const levenshteinDistance = distance(w1, w2);
   
-  // 1. Position-based matching (good for catching typos at specific positions)
-  let positionMatches = 0;
-  for (let i = 0; i < maxLength; i++) {
-    if (w1[i] === w2[i]) {
-      positionMatches++;
-    }
-  }
-  const positionSimilarity = positionMatches / maxLength;
-  
-  // 2. Character presence (good for catching transpositions and extra/missing letters)
-  // Count characters in common, considering repeats
-  const chars1: Record<string, number> = {};
-  const chars2: Record<string, number> = {};
-  
-  // Count characters in first word
-  for (const char of w1) {
-    chars1[char] = (chars1[char] || 0) + 1;
-  }
-  
-  // Count characters in second word
-  for (const char of w2) {
-    chars2[char] = (chars2[char] || 0) + 1;
-  }
-  
-  // Count characters in common
-  let commonChars = 0;
-  for (const char in chars1) {
-    commonChars += Math.min(chars1[char], chars2[char] || 0);
-  }
-  
-  const characterSimilarity = commonChars / maxLength;
-  
-  // Use the better of the two similarity scores
-  const similarity = Math.max(positionSimilarity, characterSimilarity);
+  // Convert to similarity score (0-1)
+  // For identical strings, distance is 0 (similarity 1)
+  // For completely different strings, distance approaches maxLength (similarity 0)
+  const similarity = 1 - (levenshteinDistance / maxLength);
   
   // Return true if similarity meets or exceeds threshold
   return similarity >= adjustedThreshold;
@@ -145,76 +116,32 @@ export function findBestMatch(
   // Convert input to lowercase for case-insensitive comparison
   const normalizedInput = input.toLowerCase();
   
-  // Try each candidate and find the best match
-  let bestMatch: string | null = null;
-  let bestScore = 0;
+  // Use the fastest-levenshtein's closest function to find the best match
+  const bestMatch = closest(normalizedInput, candidates.map(c => c.toLowerCase()));
   
-  for (const candidate of candidates) {
-    // Skip if candidate is too different in length
-    const lengthDiff = Math.abs(normalizedInput.length - candidate.length);
-    const lengthFactor = lengthDiff / Math.max(normalizedInput.length, candidate.length);
-    if (lengthFactor > 0.5) {
-      continue;
-    }
-    
-    // Adjust threshold based on word length
-    const maxLength = Math.max(normalizedInput.length, candidate.length);
-    let adjustedThreshold = threshold;
-    
-    // For short words (3-4 characters), be more lenient
-    if (maxLength <= 4) {
-      adjustedThreshold = threshold - 0.1;
-    }
-    // For longer words (>= 8 characters), be more lenient as well
-    else if (maxLength >= 8) {
-      adjustedThreshold = threshold - 0.05 - (Math.min(maxLength, 12) - 8) * 0.01;
-    }
-    
-    // Calculate similarity using the same dual approach as fuzzyMatchWord
-    const normalizedCandidate = candidate.toLowerCase();
-    
-    // 1. Position-based matching
-    let positionMatches = 0;
-    for (let i = 0; i < maxLength; i++) {
-      if (normalizedInput[i] === normalizedCandidate[i]) {
-        positionMatches++;
-      }
-    }
-    const positionSimilarity = positionMatches / maxLength;
-    
-    // 2. Character presence
-    const chars1: Record<string, number> = {};
-    const chars2: Record<string, number> = {};
-    
-    // Count characters in input
-    for (const char of normalizedInput) {
-      chars1[char] = (chars1[char] || 0) + 1;
-    }
-    
-    // Count characters in candidate
-    for (const char of normalizedCandidate) {
-      chars2[char] = (chars2[char] || 0) + 1;
-    }
-    
-    // Count characters in common
-    let commonChars = 0;
-    for (const char in chars1) {
-      commonChars += Math.min(chars1[char], chars2[char] || 0);
-    }
-    
-    const characterSimilarity = commonChars / maxLength;
-    
-    // Use the better of the two similarity scores
-    const similarity = Math.max(positionSimilarity, characterSimilarity);
-    
-    // Update best match if this is better
-    if (similarity >= adjustedThreshold && similarity > bestScore) {
-      bestMatch = candidate; // Keep original case from candidates
-      bestScore = similarity;
-    }
+  // Get the index of the best match in the lowercase candidates
+  const bestMatchIndex = candidates.findIndex(c => 
+    c.toLowerCase() === bestMatch);
+  
+  // Calculate the similarity score for the best match
+  const maxLength = Math.max(normalizedInput.length, bestMatch.length);
+  const levenshteinDistance = distance(normalizedInput, bestMatch);
+  const similarity = 1 - (levenshteinDistance / maxLength);
+  
+  // Adjust threshold based on word length
+  let adjustedThreshold = threshold;
+  if (maxLength <= 4) {
+    adjustedThreshold = threshold - 0.1;
+  } else if (maxLength >= 8) {
+    adjustedThreshold = threshold - 0.05 - (Math.min(maxLength, 12) - 8) * 0.01;
   }
   
-  return bestMatch;
+  // Return the original case candidate if similar enough
+  if (similarity >= adjustedThreshold && bestMatchIndex !== -1) {
+    return candidates[bestMatchIndex];
+  }
+  
+  return null;
 }
 
 /**

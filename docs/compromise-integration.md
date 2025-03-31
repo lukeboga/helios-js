@@ -175,4 +175,55 @@ Debug tests are also available in `test/debug` for more complex scenarios and pa
 
 For detailed information about our testing approach, structure, and best practices, see the [Testing Guide](./development/testing-guide.md).
 
-When adding new pattern handlers, always include comprehensive tests to ensure your implementation works correctly in isolation and when combined with other patterns. 
+When adding new pattern handlers, always include comprehensive tests to ensure your implementation works correctly in isolation and when combined with other patterns.
+
+## Misspelling Correction
+
+The Helios system includes robust misspelling correction capabilities, allowing it to recognize and process natural language patterns even when they contain common spelling errors. This feature is particularly important for handling user input, which often contains typos or spelling variations.
+
+### How Misspelling Correction Works
+
+1. **Pre-processing Pipeline**: Before text is processed by CompromiseJS, it goes through a normalization pipeline that includes misspelling correction.
+
+2. **Dictionary-based Approach**: We maintain comprehensive dictionaries of common misspellings for:
+   - Day names (e.g., "mondey" → "monday", "tuseday" → "tuesday")
+   - Month names (e.g., "janurary" → "january", "feburary" → "february")
+   - Frequency terms (e.g., "dayly" → "daily", "wekly" → "weekly")
+   - Special pattern words (e.g., "evrey" → "every", "weekdys" → "weekday")
+   - Interval terms (e.g., "bi-weekley" → "bi-weekly", "fortnightley" → "fortnightly")
+   - Other calendar-related terminology
+
+3. **Fuzzy Matching**: For words not explicitly in our dictionaries, we use the `fastest-levenshtein` library to perform fuzzy matching, with dynamic thresholds based on word length.
+
+### Supported Misspelling Patterns
+
+The system can effectively handle:
+
+- Day name misspellings: "mondey", "tuseday", "wednessday", etc.
+- Month name misspellings: "janurary", "feburary", "septembr", etc.
+- Frequency term misspellings: "dayly", "wekly", "monthy", "yeerly", etc.
+- Special term misspellings: "evry", "eech", "untill", etc.
+- Combined patterns with multiple misspellings: "evrey weekdys", "last friady of eech month", etc.
+
+### Adding New Misspellings
+
+When you encounter common misspellings that aren't handled correctly:
+
+1. Add them to the appropriate dictionary in `src/constants.ts`:
+   - `DAY_NAME_VARIANTS` for day misspellings
+   - `MONTH_NAME_VARIANTS` for month misspellings
+   - `TERM_SYNONYMS` for other term misspellings
+
+2. Follow the existing pattern format:
+   ```typescript
+   'misspelling': DAYS.CORRECT_DAY,
+   // or
+   'misspelling': 'correct term',
+   ```
+
+3. Run the misspelling correction tests to verify your additions:
+   ```
+   npm run test:misspellings
+   ```
+
+By continuously expanding our misspelling dictionaries, we can improve the system's ability to understand natural language inputs. 
