@@ -14,7 +14,6 @@
     "test:unit": "vitest test/unit",
     "test:integration": "vitest test/integration",
     "test:compromise": "vitest test/unit/compromise test/integration/compromise",
-    "test:patterns": "vitest test/unit/patterns",
     "simple-test": "node -r esbuild-register test/utils/simple-test.ts",
     "fuzzy-test": "node -r esbuild-register test/utils/fuzzy-match.test.ts",
     "benchmark": "node -r esbuild-register test/utils/benchmark-compromise.ts",

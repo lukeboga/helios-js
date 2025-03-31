@@ -14,7 +14,6 @@ test/
 │   │   ├── compromise.test.ts         # Core processor tests
 │   │   ├── untilDate.debug.test.ts    # Debug tests for until date patterns
 │   │   └── dayOfMonth.debug.test.ts   # Debug tests for day of month patterns
-│   └── patterns/          # Tests for legacy pattern handlers
 ├── integration/           # Integration tests for public APIs
 │   └── compromise/        # Integration tests for CompromiseJS APIs
 ├── debug/                 # Debugging tools and test scripts
