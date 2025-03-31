@@ -19,6 +19,22 @@ These are the most basic ways to express how often something happens:
 | "monthly" | Happens once a month | "Monthly budget review" |
 | "yearly" or "annually" | Happens once a year | "Yearly performance review" |
 
+### Alternative Terms
+
+You can use different words to express the same frequency:
+
+| What You Say | What It Means | Examples |
+|--------------|---------------|----------|
+| "every day" | Same as "daily" | "Check email every day" |
+| "each day" | Same as "daily" | "Take medication each day" |
+| "all days" | Same as "daily" | "Water plants all days" |
+| "any day" | Same as "daily" | "Exercise any day" |
+
+These terms work the same way for other frequencies too:
+- "each week" = "every week" = "weekly"
+- "all months" = "every month" = "monthly"
+- "any year" = "every year" = "yearly"
+
 ### Using "Every"
 
 You can also use "every" followed by a time unit:

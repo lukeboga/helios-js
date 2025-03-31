@@ -14,6 +14,31 @@ Helios-JS uses a modular pattern recognition system that processes natural langu
 
 Pattern handlers are applied in priority order, with higher-priority handlers taking precedence when conflicts arise.
 
+## Pattern Recognition
+
+The pattern recognition system uses a combination of exact matching and synonym replacement to handle various ways users might express the same pattern. This includes:
+
+### Term Synonyms
+
+The system supports alternative terms through the `TERM_SYNONYMS` mapping:
+
+```typescript
+// Special pattern synonyms
+'all': 'every',
+'each': 'every',
+'any': 'every',
+```
+
+These synonyms are applied during normalization, allowing users to express patterns in different ways:
+
+| Input | Normalized | RRule Output |
+|-------|------------|--------------|
+| "each day" | "daily" | `{ freq: RRule.DAILY }` |
+| "all weekdays" | "every weekday" | `{ freq: RRule.WEEKLY, byweekday: [MO,TU,WE,TH,FR] }` |
+| "any monday" | "every monday" | `{ freq: RRule.WEEKLY, byweekday: [MO] }` |
+
+The synonym replacement happens after misspelling correction but before case normalization, ensuring that variations are properly handled while maintaining the correct pattern structure.
+
 ## Pattern Handler Priorities
 
 | Handler | Priority | Purpose |
