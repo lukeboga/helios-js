@@ -156,4 +156,23 @@ If you encounter issues with pattern recognition:
 
 ## Extending Pattern Support
 
-If you need to support additional pattern types, you can contribute by adding new pattern handlers in the `src/compromise/patterns` directory. Each handler follows a consistent interface for analyzing patterns and updating recurrence options. 
+If you need to support additional pattern types, you can contribute by adding new pattern handlers in the `src/compromise/patterns` directory. Each handler follows a consistent interface for analyzing patterns and updating recurrence options.
+
+For more details on contributing pattern handlers, see the [Contribution Guide](./contribution-guide.md).
+
+## Testing Pattern Handlers
+
+The HeliosJS library includes a comprehensive test suite for pattern handlers using Vitest. Tests are located in the `test/unit/compromise` directory and organized by pattern type. 
+
+Each pattern handler has its own set of tests that verify:
+- Basic pattern recognition
+- Parameter extraction
+- Variations of the same pattern
+- Edge cases and special formats
+- Combinations with other patterns
+
+Debug tests are also available in `test/debug` for more complex scenarios and pattern combinations that need additional debugging.
+
+For detailed information about our testing approach, structure, and best practices, see the [Testing Guide](./development/testing-guide.md).
+
+When adding new pattern handlers, always include comprehensive tests to ensure your implementation works correctly in isolation and when combined with other patterns. 

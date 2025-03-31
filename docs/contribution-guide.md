@@ -126,25 +126,31 @@ import { parseDate } from '../utils/dateUtil';
 
 ### 3. Testing
 
-Create tests for your handler in the `test` directory:
+Create tests for your handler in the `test/unit/compromise` directory:
 
 ```typescript
-// test/patterns/myNewPattern.test.ts
+// test/unit/compromise/yourPattern.test.ts
 import { describe, it, expect } from 'vitest';
-import { processRecurrencePattern } from '../../src/processor';
+import { processRecurrencePattern } from '../../../src/processor';
+import { RRule } from 'rrule';
 
-describe('My New Pattern Handler', () => {
+describe('Your Pattern Handler', () => {
   it('recognizes basic pattern', () => {
-    const result = processRecurrencePattern('every 15th of January');
+    const result = processRecurrencePattern('your pattern text');
     
     expect(result).not.toBeNull();
-    expect(result?.bymonthday).toBe(15);
-    expect(result?.bymonth).toBe(1);
+    if (result) {
+      // Test specific properties
+      expect(result.propertyName).toBe(expectedValue);
+      expect(result.confidence).toBeGreaterThan(0.9);
+    }
   });
   
   // More test cases...
 });
 ```
+
+For comprehensive information about our testing approach, structure, and best practices, see the [Testing Guide](./development/testing-guide.md).
 
 ### 4. Performance Considerations
 

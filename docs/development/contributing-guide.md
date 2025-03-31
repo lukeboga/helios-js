@@ -179,74 +179,27 @@ export function normalizeInput(input: string, options?: NormalizerOptions): stri
 
 ## Testing
 
-Helios-JS uses Jest for testing. Follow these guidelines when adding or modifying tests:
+HeliosJS uses Vitest for testing. For comprehensive information about our testing approach, structure, and best practices, see the [Testing Guide](./testing-guide.md).
 
-### Test Structure
+Key points:
 
-- Group tests for a single unit using `describe`
-- Use descriptive test names that explain what's being tested
-- Follow the AAA (Arrange, Act, Assert) pattern
+- Tests are organized in the `test/` directory by type (unit, integration, debug)
+- Unit tests focus on testing individual components in isolation
+- Integration tests verify public API behavior
+- Debug tests help diagnose specific issues
+- Follow the testing conventions and practices documented in the Testing Guide
 
-Example:
-
-```typescript
-describe('normalizeInput', () => {
-  it('converts text to lowercase', () => {
-    // Arrange
-    const input = 'Every Monday';
-    
-    // Act
-    const result = normalizeInput(input);
-    
-    // Assert
-    expect(result).toBe('every monday');
-  });
-  
-  it('removes ordinal suffixes from numbers', () => {
-    // Arrange
-    const input = 'every 2nd week';
-    
-    // Act
-    const result = normalizeInput(input);
-    
-    // Assert
-    expect(result).toBe('every 2 week');
-  });
-});
-```
-
-### Running Tests
-
-Run tests with:
+Running tests:
 
 ```bash
-# Using npm
-npm test
+# Run all tests
+npm run test:unit
 
-# Using yarn
-yarn test
-```
+# Run specific tests
+npm run test:unit -- --run "Frequency Pattern"
 
-Run tests in watch mode during development:
-
-```bash
-# Using npm
-npm test -- --watch
-
-# Using yarn
-yarn test --watch
-```
-
-### Test Coverage
-
-Aim for high test coverage, especially for core functionality:
-
-```bash
-# Using npm
-npm test -- --coverage
-
-# Using yarn
-yarn test --coverage
+# Run tests in watch mode
+npm run test:unit -- --watch
 ```
 
 ## Documentation
