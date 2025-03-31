@@ -151,6 +151,10 @@ export interface RecurrenceOptions {
   
   // Source information for debugging and user feedback
   sourcePatterns?: string[];
+  
+  // Confidence level of the pattern recognition (0.0 to 1.0)
+  // Higher values indicate more certain matches
+  confidence?: number;
 }
 
 /**

@@ -22,6 +22,7 @@
   ],
   "dependencies": {
     "chrono-node": "^2.7.8",
+    "compromise": "^14.14.4",
     "fastest-levenshtein": "^1.0.16",
     "rrule": "^2.8.1",
     "uuid": "^11.1.0"
