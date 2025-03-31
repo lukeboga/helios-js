@@ -1,19 +1,19 @@
 # CompromiseJS Integration for HeliosJS
 
-This document outlines how HeliosJS integrates [CompromiseJS](https://github.com/spencermountain/compromise) for natural language recurrence pattern processing. This integration replaces the previous regex-based transformer with a more robust and maintainable NLP-based solution.
+This document outlines how HeliosJS integrates [CompromiseJS](https://github.com/spencermountain/compromise) for natural language recurrence pattern processing. 
 
 ## Overview
 
-HeliosJS now uses CompromiseJS to parse natural language date recurrence patterns like "every Monday," "biweekly," or "monthly until December" into structured RRule options. This approach provides:
+HeliosJS uses CompromiseJS to parse natural language date recurrence patterns like "every Monday," "biweekly," or "monthly until December" into structured RRule options. This approach provides:
 
-- More reliable pattern recognition
+- Reliable pattern recognition
 - Better handling of complex patterns
 - Easier maintenance and extensibility
-- Improved performance for common patterns
+- Improved performance with optimizations
 
 ## Usage
 
-The CompromiseJS integration is fully backward compatible with the existing API. You can continue using the `transformRecurrencePattern` function as before, or use the new `processRecurrencePattern` function directly:
+The main entry point is the `processRecurrencePattern` function which analyzes natural language patterns and converts them to RRule options:
 
 ```typescript
 import { processRecurrencePattern } from 'helios-js';
@@ -21,16 +21,29 @@ import { RRule } from 'rrule';
 
 // Process a natural language pattern
 const options = processRecurrencePattern('every monday and friday');
+if (options) {
+  // Create an RRule instance
+  const rule = new RRule(options);
 
-// Create an RRule instance
-const rule = new RRule(options);
+  // Display the recurrence rule
+  console.log(rule.toText());  // "every Monday and Friday"
 
-// Display the recurrence rule
-console.log(rule.toText());  // "every Monday and Friday"
+  // Get next occurrence dates
+  const nextDates = rule.all((date) => date.getTime() < Date.now() + 30 * 24 * 60 * 60 * 1000);
+  console.log(nextDates);  // Next 30 days of occurrences
+}
+```
 
-// Get next occurrence dates
-const nextDates = rule.all((date) => date.getTime() < Date.now() + 30 * 24 * 60 * 60 * 1000);
-console.log(nextDates);  // Next 30 days of occurrences
+For convenience, you can also use the top-level helpers:
+
+```typescript
+import { createRRule } from 'helios-js';
+
+// Create an RRule directly from a pattern
+const rule = createRRule(new Date(), 'every monday and friday');
+if (rule) {
+  console.log(rule.toText());
+}
 ```
 
 ## Supported Pattern Types
@@ -111,7 +124,7 @@ const options = processRecurrencePattern('every monday', {
 
 ### Handling Complex Patterns
 
-The CompromiseJS integration can handle more complex combinations of patterns:
+The CompromiseJS integration can handle complex combinations of patterns:
 
 ```typescript
 // Complex pattern with day of week and interval
@@ -139,7 +152,7 @@ If you encounter issues with pattern recognition:
 1. Ensure pattern text is clear and unambiguous
 2. For complex patterns, try breaking them into simpler components
 3. Check the result's `confidence` property; lower values indicate potential issues
-4. For patterns not yet supported, you can fall back to manual RRule options
+4. Remember that `processRecurrencePattern` returns `null` for unrecognized patterns
 
 ## Extending Pattern Support
 

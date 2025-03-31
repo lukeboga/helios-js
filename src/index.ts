@@ -21,17 +21,26 @@
  */
 
 import { RRule } from 'rrule';
-import type { Options as RRuleOptions } from 'rrule';
-import { transformRecurrencePattern } from './transformer';
+import type { Options as RRuleOptions, ByWeekday } from 'rrule';
+import type { Frequency } from 'rrule';
+import { processRecurrencePattern, RecurrenceProcessorOptions } from './processor';
 import { normalizeInput, comprehensiveNormalize, type NormalizerOptions } from './normalizer';
 import { datetime, asWeekdays } from './utils';
-import type { TransformerConfig, TransformationResult } from './types';
+import type { RecurrenceOptions } from './types';
 
 // Re-export utility functions
 export { datetime, normalizeInput, comprehensiveNormalize };
 
 // Re-export types
-export type { TransformerConfig, NormalizerOptions };
+export type { RecurrenceProcessorOptions, NormalizerOptions };
+
+// Type for RRule constructor that requires only freq property
+interface MinimalRRuleOptions {
+  freq: Frequency;
+  dtstart?: Date;
+  interval?: number;
+  [key: string]: any;
+}
 
 /**
  * Converts a natural language recurrence pattern to an RRule options object
@@ -44,8 +53,8 @@ export type { TransformerConfig, NormalizerOptions };
  * 
  * @param startDate - The start date for the recurrence pattern
  * @param recurrencePattern - Natural language description (e.g., "every 2 weeks")
- * @param config - Optional configuration for the transformation process
- * @returns An RRule configuration object
+ * @param config - Optional configuration for the processing
+ * @returns An RRule configuration object or null if pattern couldn't be processed
  * 
  * @example
  * // Returns options for weekly recurrence on Mondays
@@ -58,15 +67,34 @@ export type { TransformerConfig, NormalizerOptions };
 export function naturalLanguageToRRule(
   startDate: Date,
   recurrencePattern: string,
-  config?: Partial<TransformerConfig>
-): RRuleOptions & TransformationResult {
-  // Transform the natural language pattern to RRule options
-  const options = transformRecurrencePattern(recurrencePattern, config);
+  config?: Partial<RecurrenceProcessorOptions>
+): MinimalRRuleOptions | null {
+  // Process the natural language pattern to RRule options
+  const options = processRecurrencePattern(recurrencePattern, config);
+  
+  // If no pattern was recognized or no frequency was found, return null
+  if (!options || options.freq === null) {
+    return null;
+  }
 
-  // Add start date to options
-  options.dtstart = startDate;
-
-  return options;
+  // Create the output options object with required properties
+  const ruleOptions: MinimalRRuleOptions = {
+    freq: options.freq,
+    dtstart: startDate,
+    interval: options.interval || 1
+  };
+  
+  // Copy optional properties if they exist
+  if (options.byweekday) ruleOptions.byweekday = options.byweekday as unknown as ByWeekday[];
+  if (options.bymonthday) ruleOptions.bymonthday = options.bymonthday;
+  if (options.bymonth) ruleOptions.bymonth = options.bymonth;
+  if (options.until) ruleOptions.until = options.until;
+  if (options.count) ruleOptions.count = options.count;
+  if (options.byhour) ruleOptions.byhour = options.byhour;
+  if (options.byminute) ruleOptions.byminute = options.byminute;
+  if (options.bysetpos) ruleOptions.bysetpos = options.bysetpos;
+  
+  return ruleOptions;
 }
 
 /**
@@ -77,8 +105,8 @@ export function naturalLanguageToRRule(
  * 
  * @param startDate - The start date for the recurrence pattern
  * @param recurrencePattern - Natural language description (e.g., "every Monday")
- * @param config - Optional configuration for the transformation process
- * @returns An RRule instance
+ * @param config - Optional configuration for the processing
+ * @returns An RRule instance or null if pattern couldn't be processed
  * 
  * @example
  * // Create a rule for every Monday
@@ -94,50 +122,30 @@ export function naturalLanguageToRRule(
 export function createRRule(
   startDate: Date,
   recurrencePattern: string,
-  config?: Partial<TransformerConfig>
-): RRule {
-  // Get the RRule options from the natural language transformer
-  const options = naturalLanguageToRRule(startDate, recurrencePattern, config);
+  config?: Partial<RecurrenceProcessorOptions>
+): RRule | null {
+  // Get the RRule options from the natural language processor
+  const ruleOptions = naturalLanguageToRRule(startDate, recurrencePattern, config);
   
-  // Create a clean options object for the RRule constructor
-  const ruleOptions: RRule.Options = {
-    freq: options.freq,
-    dtstart: startDate,
-    interval: options.interval || 1
-  };
-  
-  // Copy remaining properties, converting nulls to undefined
-  if (options.wkst !== null) ruleOptions.wkst = options.wkst;
-  if (options.count !== null) ruleOptions.count = options.count;
-  if (options.until !== null) ruleOptions.until = options.until;
-  if (options.bysetpos !== null) ruleOptions.bysetpos = options.bysetpos;
-  if (options.bymonth !== null) ruleOptions.bymonth = options.bymonth;
-  if (options.bymonthday !== null) ruleOptions.bymonthday = options.bymonthday;
-  if (options.byyearday !== null) ruleOptions.byyearday = options.byyearday;
-  if (options.byweekno !== null) ruleOptions.byweekno = options.byweekno;
-  if (options.byhour !== null) ruleOptions.byhour = options.byhour;
-  if (options.byminute !== null) ruleOptions.byminute = options.byminute;
-  if (options.bysecond !== null) ruleOptions.bysecond = options.bysecond;
-  
-  // Handle byweekday property specially
-  if (options.byweekday !== null) {
-    // Direct cast as any -> correct type for RRule constructor
-    ruleOptions.byweekday = options.byweekday as any;
+  // If no pattern was recognized, return null
+  if (!ruleOptions) {
+    return null;
   }
   
+  // Create the RRule instance with the options
   return new RRule(ruleOptions);
 }
 
 /**
  * Validates if a natural language pattern can be parsed correctly
  * 
- * This function checks if a given pattern can be successfully transformed
+ * This function checks if a given pattern can be successfully processed
  * into RRule options. It returns a validation result with details about
  * the success or failure of the parsing attempt.
  * 
  * @param pattern - The natural language pattern to validate
- * @param config - Optional configuration for the transformation process
- * @returns Validation result with success flag, confidence score, and any warnings
+ * @param config - Optional configuration for the processing
+ * @returns Validation result with success flag and confidence score
  * 
  * @example
  * // Check if a pattern is valid
@@ -145,34 +153,32 @@ export function createRRule(
  * if (result.valid) {
  *   console.log("Pattern is valid with confidence:", result.confidence);
  * } else {
- *   console.log("Pattern is invalid:", result.warnings);
+ *   console.log("Pattern is invalid");
  * }
  */
 export function validatePattern(
   pattern: string,
-  config?: Partial<TransformerConfig>
+  config?: Partial<RecurrenceProcessorOptions>
 ): ValidationResult {
   try {
-    // Attempt to transform the pattern
-    const result = transformRecurrencePattern(pattern, config);
+    // Attempt to process the pattern
+    const result = processRecurrencePattern(pattern, config);
     
-    // Check if we have any frequency set (the minimum requirement)
-    const isValid = result.freq !== null;
+    // Check if we have any result
+    const isValid = result !== null;
     
     // Return the validation result
     return {
       valid: isValid,
-      confidence: result.confidence || 0,
-      warnings: result.warnings || [],
-      matchedPatterns: result.matchedPatterns || []
+      confidence: result?.confidence || 0,
+      warnings: []
     };
   } catch (error) {
-    // If transformation throws an error, the pattern is invalid
+    // If processing throws an error, the pattern is invalid
     return {
       valid: false,
       confidence: 0,
-      warnings: [(error as Error).message],
-      matchedPatterns: []
+      warnings: [(error as Error).message]
     };
   }
 }
@@ -230,11 +236,6 @@ export interface ValidationResult {
    * Array of warnings or error messages
    */
   warnings: string[];
-  
-  /**
-   * Array of pattern types that were matched
-   */
-  matchedPatterns: string[];
 }
 
 // For better compatibility with the RRule library, we also export the utility
@@ -242,4 +243,4 @@ export interface ValidationResult {
 export { asWeekdays };
 
 // Export type definitions to be used by consumers
-export type { RRuleOptions, TransformationResult };
+export type { RRuleOptions, RecurrenceOptions };
