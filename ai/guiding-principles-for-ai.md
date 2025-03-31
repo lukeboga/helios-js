@@ -18,13 +18,26 @@ Here are the Guiding Principles (GPs) you must adhere to throughout our conversa
 ## Code Quality Principles
 
 - Your code must be highly readable, well commented and documented. I especially value detailed comments explaining what functions, methods, classes etc, and large blocks of code are doing, including why they were chosen or implemented in a certain way. These comments must be in the code itself. It is of critical importance that even a beginner developer can understand how everything works.
-- Your code must be highly performant, efficient and DRY, and adhere to the highest standards. However, I DO NOT want to create complex tests at this stage (although we can utilise basic testing via node scripts). I also DO NOT want to focus on linting and formatting with things like eslint or prettier at this stage. We can do this later.
+- Your code must be highly performant, efficient and DRY, and adhere to the highest standards. 
 - Code architecture must follow separation of concerns, with clear boundaries between modules. Prefer composition over inheritance, create appropriately-sized functions with single responsibilities, and design interfaces that expose only what's necessary. Consider how your architecture enables testing, extension, and future changes.
-- Though we aren't implementing complex tests yet, all code should be designed with testability in mind. Functions should have clear inputs and outputs, side effects should be minimized and well-documented, and dependencies should be injectable to enable future testing.
+- All code should be designed with testability in mind. Functions should have clear inputs and outputs, side effects should be minimized and well-documented, and dependencies should be injectable to enable testing.
 - Error handling must be comprehensive and user-friendly. Implement appropriate error types that provide context, use meaningful error messages that suggest solutions, and ensure errors are caught at the right level of abstraction. Always prevent unhandled exceptions from affecting the application's stability.
 - Proactively identify and handle edge cases in your implementations. Consider boundary conditions, unexpected inputs, resource constraints, and failure scenarios. Document any assumptions your code makes about its inputs and environment.
 - Apply security best practices in all code, including input validation, escaping output, avoiding common vulnerabilities, and not exposing sensitive information. Even for internal tools, consider security implications of design choices.
 - Unless otherwise specified, code should be compatible with the latest stable versions of dependencies and target environments. When using newer features, note compatibility implications in your comments.
+
+## Testing Principles
+
+- Follow the project's established testing patterns using Vitest as the testing framework.
+- Write unit tests for individual components that test both successful behavior and edge cases.
+- Structure tests using the describe/it pattern to clearly organize test cases.
+- Include both standalone component tests (testing handlers directly) and integration tests (testing through the transformer).
+- Use assertions that express the intent of the test clearly (expect().toBe(), expect().toContain(), etc.).
+- Tests should verify both the presence of expected behavior and the absence of unexpected behavior.
+- For complex modules, consider adding debug test files in the test/debug directory for specialized testing scenarios.
+- Simple test scripts can be used for quick verification, but structured unit tests should be created for all core functionality.
+- Tests should be designed to verify behavior, not implementation details, to allow for future refactoring.
+- I DO NOT want to focus on linting and formatting with things like eslint or prettier at this stage. We can do this later.
 
 ## Decision-Making and Development Approach
 
