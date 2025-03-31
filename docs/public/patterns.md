@@ -12,28 +12,12 @@ Natural language patterns are everyday phrases we use to describe when something
 
 These are the most basic ways to express how often something happens:
 
-| Pattern | Examples | Notes |
-|---------|----------|-------|
-| `daily` | "daily", "every day", "each day", "all days" | Most common frequency |
-| `weekly` | "weekly", "every week", "each week", "all weeks" | Weekly recurrence |
-| `monthly` | "monthly", "every month", "each month", "all months" | Monthly recurrence |
-| `yearly` | "yearly", "annually", "every year", "each year", "all years" | Yearly recurrence |
-
-### Alternative Terms
-
-The library supports various ways to express frequency using alternative terms:
-
-| Term | Examples | Equivalent To |
-|------|----------|---------------|
-| `every` | "every day", "every week" | Standard form |
-| `each` | "each day", "each week" | Same as "every" |
-| `all` | "all days", "all weeks" | Same as "every" |
-| `any` | "any day", "any week" | Same as "every" |
-
-These terms can be used interchangeably in most patterns. For example:
-- "each monday" = "every monday"
-- "all weekdays" = "every weekday"
-- "any day of the week" = "every day"
+| What You Say | What It Means | Examples |
+|--------------|---------------|----------|
+| "daily" | Happens every day | "Submit daily report" |
+| "weekly" | Happens once a week | "Weekly team meeting" |
+| "monthly" | Happens once a month | "Monthly budget review" |
+| "yearly" or "annually" | Happens once a year | "Yearly performance review" |
 
 ### Using "Every"
 
