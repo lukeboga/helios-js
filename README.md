@@ -14,7 +14,9 @@ HeliosJS bridges the gap between how humans express recurring events and the str
   - Intervals: "every 2 weeks", "every other day"
   - Days of week: "every Monday", "every Tuesday and Thursday"
   - Special day groups: "every weekday", "every weekend"
+  - End dates: "until December 31", "ending next month"
 - Extensible pattern recognition system
+- Comprehensive normalization pipeline
 - TypeScript support with full type definitions
 
 ## Installation
@@ -25,10 +27,10 @@ npm install helios-js
 yarn add helios-js
 ```
 
-## Usage
+## Quick Usage
 
 ```typescript
-import { createRRule, datetime } from 'helios-js';
+import { createRRule } from 'helios-js';
 
 // Create a rule for every Monday
 const rule = createRRule(new Date(), "every monday");
@@ -36,36 +38,66 @@ const rule = createRRule(new Date(), "every monday");
 // Get the next 5 occurrences
 const nextFive = rule.all((date, i) => i < 5);
 
-// Create a rule with a specific start date and end date
-const startDate = datetime(2023, 1, 1); // January 1, 2023
-const endDate = datetime(2023, 12, 31); // December 31, 2023
-const yearlyRule = createRRule(startDate, "yearly", endDate);
+// Create a rule with a specific pattern
+const weeklyRule = createRRule(
+  new Date(), 
+  "every 2 weeks on Tuesday and Thursday until December 31, 2023"
+);
 ```
 
-## API
+## Documentation
 
-### `naturalLanguageToRRule(startDate, recurrencePattern, endDate?)`
+For comprehensive documentation, please refer to the [documentation directory](./docs/README.md), which includes:
+
+### User Documentation
+
+- [Getting Started Guide](./docs/public/getting-started.md)
+- [Pattern Guide](./docs/public/patterns.md)
+- [Advanced Usage Guide](./docs/public/advanced-usage.md)
+- [Troubleshooting Guide](./docs/public/troubleshooting.md)
+
+### Developer Documentation
+
+- [Architecture Overview](./docs/development/architecture-overview.md)
+- [API Reference](./docs/development/api-reference.md)
+- [Normalization Pipeline](./docs/development/normalization-pipeline.md)
+- [Pattern Handler Guide](./docs/development/pattern-handler-guide.md)
+- [Contributing Guide](./docs/development/contributing-guide.md)
+
+## Core API Functions
+
+### `naturalLanguageToRRule(startDate, recurrencePattern, config?)`
 
 Converts a natural language recurrence pattern to an RRule options object.
 
-- `startDate`: The start date for the recurrence pattern
-- `recurrencePattern`: Natural language description (e.g., "every 2 weeks")
-- `endDate`: Optional end date for the recurrence pattern
-- Returns: An RRule configuration object
+```typescript
+import { naturalLanguageToRRule } from 'helios-js';
 
-### `createRRule(startDate, recurrencePattern, endDate?)`
+const options = naturalLanguageToRRule(new Date(), "every monday");
+```
+
+### `createRRule(startDate, recurrencePattern, config?)`
 
 Creates an RRule instance from a natural language recurrence pattern.
 
-- `startDate`: The start date for the recurrence pattern
-- `recurrencePattern`: Natural language description (e.g., "every Monday")
-- `endDate`: Optional end date for the recurrence pattern
-- Returns: An RRule instance
+```typescript
+import { createRRule } from 'helios-js';
 
-### Utility Functions
+const rule = createRRule(new Date(), "every monday");
+```
 
-- `datetime(year, month, day, hour?, minute?, second?)`: Creates a date in UTC format with month starting from 1 (not 0)
-- `asWeekdays(weekdays)`: Helps handle type incompatibilities between RRule.Weekday constants and imported Weekday type
+### `validatePattern(pattern, config?)`
+
+Validates if a natural language pattern can be parsed correctly.
+
+```typescript
+import { validatePattern } from 'helios-js';
+
+const validation = validatePattern("every monday");
+if (validation.valid) {
+  console.log("Pattern is valid!");
+}
+```
 
 ## Project Structure
 
@@ -77,6 +109,11 @@ Creates an RRule instance from a natural language recurrence pattern.
 - `src/errors.ts` - Custom error classes
 - `src/patterns/` - Pattern recognition modules
 - `src/utils/` - Utility functions
+- `docs/` - Comprehensive documentation
+
+## Contributing
+
+Contributions are welcome! Please see our [Contributing Guide](./docs/development/contributing-guide.md) for details.
 
 ## License
 
