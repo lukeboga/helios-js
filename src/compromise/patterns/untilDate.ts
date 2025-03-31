@@ -23,10 +23,11 @@ export function applyUntilDatePatterns(
   options: RecurrenceOptions,
   config?: any
 ): PatternHandlerResult {
+  // Initialize result with warnings as an empty array
   const result: PatternHandlerResult = {
     matched: false,
     confidence: 1.0,
-    warnings: []
+    warnings: [] // Ensure warnings is always initialized
   };
   
   const text = doc.text().toLowerCase();
@@ -48,11 +49,21 @@ export function applyUntilDatePatterns(
         // Set the time to end of day to include the last day
         date.setHours(23, 59, 59, 999);
         
+        // Set the until date
         options.until = date;
+        
+        // If no frequency is set, default to daily for standalone patterns like "until december"
+        if (options.freq === undefined || options.freq === null) {
+          options.freq = RRule.DAILY;
+        }
+        
         result.matched = true;
       }
     } catch (e) {
       // If date parsing fails, add a warning
+      if (!result.warnings) {
+        result.warnings = []; // Double-check warnings is initialized
+      }
       result.warnings.push(`Failed to parse end date: ${datePart}`);
     }
   }
