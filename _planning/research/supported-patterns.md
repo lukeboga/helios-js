@@ -19,10 +19,28 @@ In the pattern definitions below:
 
 | Pattern | RRule Output | Examples | Notes |
 |---------|-------------|----------|-------|
-| `daily` | `{ freq: RRule.DAILY }` | "daily" | Highest confidence |
-| `weekly` | `{ freq: RRule.WEEKLY }` | "weekly" | Highest confidence |
-| `monthly` | `{ freq: RRule.MONTHLY }` | "monthly" | Highest confidence |
-| `(yearly\|annually)` | `{ freq: RRule.YEARLY }` | "yearly", "annually" | Both terms are equivalent |
+| `daily` | `{ freq: RRule.DAILY }` | "daily", "every day", "each day", "all days", "any day" | Highest confidence |
+| `weekly` | `{ freq: RRule.WEEKLY }` | "weekly", "every week", "each week", "all weeks", "any week" | Highest confidence |
+| `monthly` | `{ freq: RRule.MONTHLY }` | "monthly", "every month", "each month", "all months", "any month" | Highest confidence |
+| `(yearly\|annually)` | `{ freq: RRule.YEARLY }` | "yearly", "annually", "every year", "each year", "all years", "any year" | Both terms are equivalent |
+
+### Alternative Terms
+
+The library supports various ways to express frequency using alternative terms. These terms are normalized to their canonical form during processing:
+
+| Term | Examples | Normalized To | Notes |
+|------|----------|---------------|-------|
+| `every` | "every day", "every week" | Standard form | Default canonical form |
+| `each` | "each day", "each week" | "every" | Equivalent to "every" |
+| `all` | "all days", "all weeks" | "every" | Equivalent to "every" |
+| `any` | "any day", "any week" | "every" | Equivalent to "every" |
+
+These terms can be used interchangeably in most patterns. For example:
+- "each monday" → "every monday" → `{ freq: RRule.WEEKLY, byweekday: [MO] }`
+- "all weekdays" → "every weekday" → `{ freq: RRule.WEEKLY, byweekday: [MO,TU,WE,TH,FR] }`
+- "any day of the week" → "every day" → `{ freq: RRule.DAILY }`
+
+The synonym replacement is handled by the normalizer before pattern matching, ensuring consistent processing regardless of the term used.
 
 ### Every + Unit Patterns
 

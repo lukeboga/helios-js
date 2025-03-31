@@ -206,4 +206,29 @@ When patterns cannot be recognized or combined properly:
 1. The system attempts to recover by applying defaults
 2. Warning messages are captured in the `warnings` array
 3. The confidence score is reduced to reflect uncertainty
-4. The transformation returns the best approximation it can create 
+4. The transformation returns the best approximation it can create
+
+## Pattern Recognition
+
+The pattern recognition system uses a combination of exact matching and synonym replacement to handle various ways users might express the same pattern. This includes:
+
+### Term Synonyms
+
+The system supports alternative terms through the `TERM_SYNONYMS` mapping:
+
+```typescript
+// Special pattern synonyms
+'all': 'every',
+'each': 'every',
+'any': 'every',
+```
+
+These synonyms are applied during normalization, allowing users to express patterns in different ways:
+
+| Input | Normalized | RRule Output |
+|-------|------------|--------------|
+| "each day" | "daily" | `{ freq: RRule.DAILY }` |
+| "all weekdays" | "every weekday" | `{ freq: RRule.WEEKLY, byweekday: [MO,TU,WE,TH,FR] }` |
+| "any monday" | "every monday" | `{ freq: RRule.WEEKLY, byweekday: [MO] }` |
+
+The synonym replacement happens after misspelling correction but before case normalization, ensuring that variations are properly handled while maintaining the correct pattern structure. 
