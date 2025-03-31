@@ -200,10 +200,20 @@ Fully normalized text with corrected misspellings and standardized terminology.
 ```typescript
 import { comprehensiveNormalize } from 'helios-js';
 
-// Correct misspellings and normalize terminology
-const normalized = comprehensiveNormalize("evry mondey and bi-weekly");
-// Returns: "every monday and every 2 weeks"
+// Correct misspellings and standardize terminology
+const normalized = comprehensiveNormalize("evry mondey and tusday");
+// Returns: "every monday and tuesday"
+
+// Handle plural forms and normalize terminology
+const normalized2 = comprehensiveNormalize("on mondays and the last day of each month");
+// Returns: "on monday and the last day of each month"
+
+// Replace synonyms with canonical forms
+const normalized3 = comprehensiveNormalize("fortnightly on weekdays");
+// Returns: "every 2 weeks on weekday"
 ```
+
+This function applies all normalization steps with their default settings, making it ideal for general-purpose text preparation before pattern matching. It's particularly useful for handling user inputs that might contain common misspellings, synonym variations, or irregular formatting.
 
 ## Utility Functions
 

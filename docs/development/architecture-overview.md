@@ -6,7 +6,7 @@ This document provides a comprehensive technical overview of Helios-JS's archite
 
 Helios-JS follows a modular, pipeline-based architecture designed for extensibility, readability, and maintainability. The system consists of several core components that work together to transform natural language inputs into structured RRule outputs.
 
-![Architecture Overview](../assets/architecture-diagram.png)
+<!-- Note: Architecture diagram needs to be created. For now, imagine a pipeline flow from input text through normalization, pattern recognition, to RRule output. -->
 
 ### High-Level Data Flow
 

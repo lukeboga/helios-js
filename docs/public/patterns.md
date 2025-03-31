@@ -98,6 +98,38 @@ You can specify when a recurring event should stop:
 |--------------|---------------|----------|
 | "until December 31st" | Stops after that date | "Weekly until December 31st" |
 | "until next year" | Stops at year end | "Monthly meetings until next year" |
+| "ending on June 15th" | Stops after that date | "Daily meetings ending on June 15th" |
+| "ending next month" | Stops at the end of next month | "Daily reminders ending next month" |
+| "until the end of summer" | Stops at the end of summer | "Weekly classes until the end of summer" |
+| "stopping on the last day of the quarter" | Stops on the last day of the current quarter | "Weekly reports stopping on the last day of the quarter" |
+
+### Combining with Other Patterns
+
+End date patterns work with all other pattern types:
+
+```javascript
+// Daily recurrence ending on a specific date
+"daily until December 31, 2023"
+
+// Weekly on specific days with an end date
+"every Monday and Wednesday until next month"
+
+// Monthly with a specific day of month and end date
+"monthly on the 15th until the end of the year"
+
+// With intervals
+"every 2 weeks until June 2024"
+```
+
+### How End Dates Work
+
+When you specify an end date:
+
+1. The recurrence continues up to (and including) the specified date
+2. Any occurrences that would fall after that date are excluded
+3. If the end date doesn't match the recurrence pattern (e.g., "every Monday until Tuesday"), the last occurrence will be the last matching day before the end date
+
+For date expressions like "next month" or "end of year", Helios-JS uses the current date as reference to determine the exact end date.
 
 ## Special Terms
 
