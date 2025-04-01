@@ -8,15 +8,19 @@
 import { RRule } from 'rrule';
 import { RecurrenceOptions, PatternHandler } from './types';
 
-// Import CompromiseJS setup and patterns
-import { setupCompromise, getDocument } from './compromise/index';
+// Import CompromiseJS setup
 import { 
-  applyFrequencyPatterns,
+  setupCompromise, 
+  getDocument,
+  // Import legacy pattern handlers that will be refactored in subsequent steps
   applyIntervalPatterns,
   applyDayOfWeekPatterns,
   applyDayOfMonthPatterns,
-  applyUntilDatePatterns 
+  applyUntilDatePatterns
 } from './compromise/index';
+
+// Import factory-based pattern handlers
+import { frequencyPatternHandler } from './compromise/patterns';
 
 // Pattern cache to avoid reprocessing
 const patternCache = new Map<string, RecurrenceOptions>();
@@ -33,6 +37,22 @@ export interface RecurrenceProcessorOptions {
   defaults?: Partial<RecurrenceOptions>;
   /** Whether to correct misspellings */
   correctMisspellings?: boolean;
+  /** Enable performance metrics collection */
+  collectMetrics?: boolean;
+}
+
+/**
+ * Performance metrics for pattern processing
+ */
+export interface ProcessorMetrics {
+  /** Total processing time in milliseconds */
+  totalTime: number;
+  /** Time spent in each pattern handler in milliseconds */
+  handlerTimes: Record<string, number>;
+  /** Number of patterns matched */
+  matchedPatterns: number;
+  /** Whether a simple pattern was matched */
+  usedSimplePattern: boolean;
 }
 
 /**
@@ -143,10 +163,29 @@ export function processRecurrencePattern(
   pattern: string,
   processorOptions: RecurrenceProcessorOptions = {}
 ): RecurrenceOptions | null {
-  const { useCache = true, defaults, forceHandlers, correctMisspellings = true } = processorOptions;
+  const { 
+    useCache = true, 
+    defaults, 
+    forceHandlers, 
+    correctMisspellings = true,
+    collectMetrics = false 
+  } = processorOptions;
+  
+  // Initialize metrics if enabled
+  const metrics: ProcessorMetrics = {
+    totalTime: 0,
+    handlerTimes: {},
+    matchedPatterns: 0,
+    usedSimplePattern: false
+  };
+  
+  const startTime = collectMetrics ? performance.now() : 0;
   
   // Check cache first if enabled
   if (useCache && patternCache.has(pattern)) {
+    if (collectMetrics) {
+      metrics.totalTime = performance.now() - startTime;
+    }
     return patternCache.get(pattern)!;
   }
   
@@ -154,7 +193,7 @@ export function processRecurrencePattern(
   const options: RecurrenceOptions = {
     confidence: 0,
     freq: null,
-    interval: 0,
+    interval: 1,  // Default interval is 1
     byweekday: null,
     bymonthday: null,
     bymonth: null,
@@ -164,6 +203,11 @@ export function processRecurrencePattern(
   // Try simple patterns first for performance
   const simpleResult = trySimplePatterns(pattern);
   if (simpleResult) {
+    if (collectMetrics) {
+      metrics.usedSimplePattern = true;
+      metrics.totalTime = performance.now() - startTime;
+    }
+    
     const finalOptions = applyDefaults(simpleResult, defaults);
     // Cache the result if caching is enabled
     if (useCache) {
@@ -180,15 +224,17 @@ export function processRecurrencePattern(
   const warnings: string[] = [];
   let highestConfidence = 0;
   
-  // Order matters here - apply more specific patterns first
-  // Define handlers as PatternHandler but still using the existing functions
-  // This is temporary until we implement the factory pattern
-  const patternHandlers: { name: string, handler: any }[] = [
-    { name: 'frequency', handler: applyFrequencyPatterns },
-    { name: 'interval', handler: applyIntervalPatterns },
-    { name: 'dayOfWeek', handler: applyDayOfWeekPatterns },
-    { name: 'dayOfMonth', handler: applyDayOfMonthPatterns },
-    { name: 'untilDate', handler: applyUntilDatePatterns }
+  // Define handlers using new factory-based approach where available
+  // Mix of new and legacy handlers during transition
+  const patternHandlers: { name: string, handler: PatternHandler }[] = [
+    // New factory-based handlers
+    { name: 'frequency', handler: frequencyPatternHandler },
+    
+    // Legacy handlers (will be replaced in subsequent steps)
+    { name: 'interval', handler: applyIntervalPatterns as PatternHandler },
+    { name: 'dayOfWeek', handler: applyDayOfWeekPatterns as PatternHandler },
+    { name: 'dayOfMonth', handler: applyDayOfMonthPatterns as PatternHandler },
+    { name: 'untilDate', handler: applyUntilDatePatterns as PatternHandler }
   ];
   
   // Apply each handler unless specific handlers are forced
@@ -198,12 +244,21 @@ export function processRecurrencePattern(
       continue;
     }
     
+    // Measure handler execution time if metrics are enabled
+    const handlerStartTime = collectMetrics ? performance.now() : 0;
+    
     // Apply the handler
     const result = handler(doc, options);
+    
+    // Track metrics if enabled
+    if (collectMetrics) {
+      metrics.handlerTimes[name] = performance.now() - handlerStartTime;
+    }
     
     // Track if any handler matched
     if (result.matched) {
       matchFound = true;
+      metrics.matchedPatterns++;
       
       // Track the highest confidence level
       if (result.confidence && result.confidence > highestConfidence) {
@@ -219,16 +274,14 @@ export function processRecurrencePattern(
   
   // If no pattern matched, return null
   if (!matchFound) {
+    if (collectMetrics) {
+      metrics.totalTime = performance.now() - startTime;
+    }
     return null;
   }
   
   // Set the confidence level based on handlers
   options.confidence = highestConfidence;
-  
-  // Set default interval to 1 if not specified
-  if (options.freq !== undefined && options.interval === undefined) {
-    options.interval = 1;
-  }
   
   // Apply defaults
   const finalOptions = applyDefaults(options, defaults);
@@ -236,6 +289,13 @@ export function processRecurrencePattern(
   // Cache the result if caching is enabled
   if (useCache) {
     updateCache(pattern, finalOptions);
+  }
+  
+  // Calculate total processing time if metrics are enabled
+  if (collectMetrics) {
+    metrics.totalTime = performance.now() - startTime;
+    // Store metrics on the result object for analysis
+    (finalOptions as any)._metrics = metrics;
   }
   
   return finalOptions;
