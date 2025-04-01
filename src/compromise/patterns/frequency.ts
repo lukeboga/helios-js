@@ -125,15 +125,4 @@ export const frequencyPatternHandler = createPatternHandler(
     priority: PATTERN_PRIORITY.FREQUENCY,
     description: 'Recognizes frequency terms like daily, weekly, monthly, yearly'
   }
-);
-
-/**
- * Legacy compatibility function to maintain backward compatibility during transition.
- * @deprecated Use frequencyPatternHandler instead
- */
-export function applyFrequencyPatterns(
-  doc: CompromiseDocument,
-  options: RecurrenceOptions
-) {
-  return frequencyPatternHandler(doc, options);
-} 
+); 

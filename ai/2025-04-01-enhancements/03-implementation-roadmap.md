@@ -11,7 +11,12 @@ The implementation is organized into phases based on the priority and dependency
 
 Throughout this implementation, we will adhere to the following principles:
 
-1. **Complete Legacy Code Removal**: Since this project is not yet published, we will completely remove all deprecated/legacy code rather than maintaining backward compatibility. This includes removing unused interfaces, outdated approaches, and references to them in both code and documentation.
+1. **ZERO Backward Compatibility**: This project is not yet published, so we will completely remove all deprecated/legacy code. This means:
+   - NO @deprecated annotations
+   - NO compatibility functions or wrappers
+   - NO references to removed code in comments or documentation
+   - ALL legacy interfaces, types, functions, and approaches must be fully deleted
+   - Complete removal of any references to legacy code in documentation
 
 2. **Clean Architecture**: We will implement a clean, consistent architecture focusing on the function-based approach with factory patterns rather than the older interface-based approach.
 
