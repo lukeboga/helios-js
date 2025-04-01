@@ -6,7 +6,7 @@
  */
 
 import { RRule } from 'rrule';
-import { RecurrenceOptions } from './types';
+import { RecurrenceOptions, PatternHandlerResult } from './types';
 
 // Import CompromiseJS setup and patterns
 import { setupCompromise, getDocument } from './compromise/index';
@@ -20,18 +20,6 @@ import {
 
 // Pattern cache to avoid reprocessing
 const patternCache = new Map<string, RecurrenceOptions>();
-
-/**
- * Result object from pattern handlers
- */
-export interface PatternHandlerResult {
-  /** Whether the pattern was matched */
-  matched: boolean;
-  /** Confidence level of the match (0.0-1.0) */
-  confidence?: number;
-  /** Any warnings during processing */
-  warnings?: string[];
-}
 
 /**
  * Options for recurrence pattern processing

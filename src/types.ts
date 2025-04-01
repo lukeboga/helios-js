@@ -14,12 +14,21 @@ import type { Options as RRuleOptions } from 'rrule';
 import type { Frequency } from 'rrule';
 import type { DayString, TimeUnitString } from './constants';
 
+// Import the CompromiseDocument type to avoid circular dependencies
+import type { CompromiseDocument } from './compromise/types';
+
 /**
  * Pattern Handler interface defines the structure for all pattern recognition modules.
  * Each pattern handler analyzes input text and updates the rule options accordingly.
  * 
  * This interface allows for consistent implementation of pattern handlers throughout
  * the system.
+ * 
+ * NOTE: This interface is being deprecated in favor of the function-based approach
+ * with the factory pattern. It is kept for reference and backward compatibility.
+ * New pattern handlers should use the factory-based approach.
+ * 
+ * @deprecated Use the factory-based pattern handler approach instead.
  */
 export interface PatternHandler {
   /**
@@ -155,6 +164,191 @@ export interface RecurrenceOptions {
   // Confidence level of the pattern recognition (0.0 to 1.0)
   // Higher values indicate more certain matches
   confidence?: number;
+}
+
+/**
+ * Result object returned by pattern handlers
+ * 
+ * This interface defines the structure of results returned by pattern handlers,
+ * providing a consistent way to communicate match results and metadata.
+ */
+export interface PatternHandlerResult {
+  /** Whether the pattern was matched */
+  matched: boolean;
+  
+  /** 
+   * Confidence level of the match (0.0-1.0)
+   * Higher values indicate more certain matches
+   */
+  confidence?: number;
+  
+  /** 
+   * Any warnings during processing
+   * Used to provide feedback about potential issues
+   */
+  warnings?: string[];
+}
+
+/**
+ * Represents a matched pattern recognized in natural language text.
+ * This is a more focused and standardized alternative to the PatternResult interface,
+ * designed to work with the modern factory-based pattern handler approach.
+ * 
+ * Each pattern match contains the specific information extracted from text,
+ * along with metadata to help process and evaluate the match quality.
+ */
+export interface PatternMatch {
+  /**
+   * The type of pattern that was matched (e.g., 'frequency', 'dayOfWeek', 'interval')
+   * Used to route the match to the appropriate processor
+   */
+  type: string;
+  
+  /**
+   * The extracted value from the match, which can be of various types
+   * depending on the pattern (e.g., RRule.DAILY, [RRule.MO, RRule.WE], 2)
+   */
+  value: any;
+  
+  /**
+   * The specific text that was matched in the document
+   * Useful for debugging and providing user feedback
+   */
+  text: string;
+  
+  /**
+   * Optional confidence score (0.0 to 1.0) indicating how certain the match is
+   * Higher values indicate more confidence in the match
+   */
+  confidence?: number;
+  
+  /**
+   * Optional array of warning messages related to this match
+   * Used to provide feedback about potential issues
+   */
+  warnings?: string[];
+}
+
+/**
+ * Function type for pattern matchers that identify specific patterns in text.
+ * 
+ * Pattern matchers examine a CompromiseJS document and extract structured
+ * information about patterns found in the text. They return null if no pattern
+ * is matched, or a PatternMatch object with the extracted information.
+ * 
+ * This function type enables a clean separation between pattern recognition
+ * and pattern processing, making handlers more modular and easier to maintain.
+ */
+export type PatternMatcher = (
+  doc: CompromiseDocument, 
+  config?: PatternMatcherConfig
+) => PatternMatch | null;
+
+/**
+ * Function type for pattern processors that update recurrence options based on a match.
+ * 
+ * Pattern processors take a match produced by a PatternMatcher and update
+ * the recurrence options accordingly. They also update the result object
+ * with any warnings or additional information.
+ * 
+ * This separation of matcher and processor enables more flexible and
+ * composable pattern handling logic.
+ */
+export type PatternProcessor = (
+  options: RecurrenceOptions,
+  match: PatternMatch,
+  result: PatternHandlerResult
+) => void;
+
+/**
+ * Configuration options for pattern matchers.
+ * 
+ * This replaces the use of 'any' in configuration parameters,
+ * providing better type safety and documentation of available options.
+ */
+export interface PatternMatcherConfig {
+  /**
+   * Whether to perform case-sensitive matching
+   * Default is false (case-insensitive)
+   */
+  caseSensitive?: boolean;
+  
+  /**
+   * Whether to allow fuzzy matching for similar words
+   * Default is true
+   */
+  fuzzyMatching?: boolean;
+  
+  /**
+   * Minimum confidence threshold for accepting a match
+   * Default is 0.6 (60% confidence)
+   */
+  minConfidence?: number;
+  
+  /**
+   * Whether to apply synonyms during matching
+   * Default is true
+   */
+  applySynonyms?: boolean;
+  
+  /**
+   * Custom synonym mappings to apply during matching
+   * These override the default synonyms
+   */
+  synonymMap?: Record<string, string>;
+}
+
+/**
+ * Modern Pattern Handler function type definition.
+ * 
+ * This represents the new standardized function signature for pattern handlers,
+ * replacing the older interface-based approach. It processes a CompromiseJS document
+ * and updates the recurrence options based on patterns found in the text.
+ * 
+ * The function returns a PatternHandlerResult indicating whether a pattern was matched
+ * and providing any additional information about the match.
+ * 
+ * This function type will be used by the handler factory to generate consistent
+ * pattern handler implementations.
+ */
+export type ModernPatternHandler = (
+  doc: CompromiseDocument,
+  options: RecurrenceOptions,
+  config?: PatternMatcherConfig
+) => PatternHandlerResult;
+
+/**
+ * Metadata for pattern handlers created by the factory function.
+ * 
+ * This provides additional information about a pattern handler that isn't
+ * part of its function signature but is useful for processing and debugging.
+ */
+export interface PatternHandlerMetadata {
+  /**
+   * Name of the pattern handler
+   */
+  name: string;
+  
+  /**
+   * Category the pattern handler belongs to (e.g., 'frequency', 'interval')
+   */
+  category: string;
+  
+  /**
+   * Priority of the pattern handler in the processing pipeline
+   * Higher values indicate higher priority (processed earlier)
+   */
+  priority: number;
+  
+  /**
+   * The matchers used by this pattern handler
+   */
+  matchers: PatternMatcher[];
+  
+  /**
+   * The processor function used by this pattern handler
+   */
+  processor: PatternProcessor;
 }
 
 /**
