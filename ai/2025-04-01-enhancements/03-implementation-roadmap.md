@@ -7,6 +7,16 @@ This document provides a structured implementation plan for the enhancements ide
 
 The implementation is organized into phases based on the priority and dependency relationships identified in the traceability matrix, with specific numbered steps for each phase.
 
+## Implementation Principles
+
+Throughout this implementation, we will adhere to the following principles:
+
+1. **Complete Legacy Code Removal**: Since this project is not yet published, we will completely remove all deprecated/legacy code rather than maintaining backward compatibility. This includes removing unused interfaces, outdated approaches, and references to them in both code and documentation.
+
+2. **Clean Architecture**: We will implement a clean, consistent architecture focusing on the function-based approach with factory patterns rather than the older interface-based approach.
+
+3. **Documentation Synchronization**: All documentation will be updated to reflect only the current implementation approach, with no references to removed legacy code.
+
 ## Preparation Phase (1-2 days)
 
 ### Version Control Setup
@@ -46,8 +56,9 @@ The implementation is organized into phases based on the priority and dependency
      - `ModernPatternHandler`: Standardized function-based handler
      - `PatternHandlerMetadata`: Metadata for factory-created handlers
      - `PatternMatcherConfig`: Type-safe configuration options
-   - Deprecated legacy `PatternHandler` interface with JSDoc notice
+   - Completely removed legacy interfaces: `PatternHandler`, `PatternResult`, `PatternMatchMetadata`, and `PatternCombiner`
    - Moved `PatternHandlerResult` from processor.ts to types.ts to avoid circular dependencies
+   - Updated dependent interfaces to use `ModernPatternHandler` instead of `PatternHandler`
    - Reference: [Pattern Matcher Interface](./01-pattern-handler-modernization-plan.md#2-pattern-matcher-interface) and [Pattern Processor Interface](./01-pattern-handler-modernization-plan.md#3-pattern-processor-interface)
    - Completed: April 2025
 
@@ -78,13 +89,14 @@ The implementation is organized into phases based on the priority and dependency
 
 7. **Update Processor to Use New Handler** ([PH-001])
    - Modify `processRecurrencePattern` in `src/processor.ts` to use the new handler
-   - Maintain backward compatibility temporarily during testing
+   - Update implementation to work with the new pattern handler architecture
    - Add metrics for evaluating the new implementation
 
 ### Documentation Updates
 
 8. **Update Pattern Handler Guide** ([DOC-003], [PH-001])
    - Update `docs/development/pattern-handler-guide.md` to reflect the new approach
+   - Remove all references to the legacy interfaces
    - Add examples using the factory pattern
    - Include diagrams showing the new architecture
    - Reference: [Documentation Impacts](./01-pattern-handler-modernization-plan.md#specific-documentation-impacts)
@@ -99,7 +111,6 @@ The implementation is organized into phases based on the priority and dependency
 
 10. **Plan Remaining Phase 1 Items**
     - Document specific changes needed for each remaining pattern handler
-    - Plan the removal/update of the unused `PatternHandler` interface
     - Establish metrics to validate completion of Phase 1
 
 ## Phase 2: Code Quality & DRYness (3-5 days)

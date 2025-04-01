@@ -18,104 +18,6 @@ import type { DayString, TimeUnitString } from './constants';
 import type { CompromiseDocument } from './compromise/types';
 
 /**
- * Pattern Handler interface defines the structure for all pattern recognition modules.
- * Each pattern handler analyzes input text and updates the rule options accordingly.
- * 
- * This interface allows for consistent implementation of pattern handlers throughout
- * the system.
- * 
- * NOTE: This interface is being deprecated in favor of the function-based approach
- * with the factory pattern. It is kept for reference and backward compatibility.
- * New pattern handlers should use the factory-based approach.
- * 
- * @deprecated Use the factory-based pattern handler approach instead.
- */
-export interface PatternHandler {
-  /**
-   * Applies pattern recognition to input text and returns a result if the pattern matches.
-   * 
-   * @param input - Normalized recurrence pattern string
-   * @returns PatternResult if a pattern was matched, null otherwise
-   */
-  apply(input: string): PatternResult | null;
-
-  /**
-   * The priority of this pattern handler in the transformation pipeline.
-   * Higher priority handlers are executed first.
-   */
-  priority: number;
-
-  /**
-   * Descriptive name of the pattern handler for debugging and logging.
-   */
-  name: string;
-
-  /**
-   * The category this pattern handler belongs to.
-   * Used for enabling/disabling groups of related patterns.
-   */
-  category: string;
-}
-
-/**
- * Represents the result of a pattern match, including the recognized options
- * and metadata about the match.
- */
-export interface PatternResult {
-  /**
-   * The recurrence options extracted from the pattern.
-   */
-  options: RecurrenceOptions;
-  
-  /**
-   * Metadata about the pattern match.
-   */
-  metadata: PatternMatchMetadata;
-}
-
-/**
- * Metadata about a pattern match, useful for debugging, combining patterns,
- * and providing user feedback.
- */
-export interface PatternMatchMetadata {
-  /**
-   * The pattern handler name that produced this result.
-   */
-  patternName: string;
-  
-  /**
-   * The pattern category (frequency, interval, dayOfWeek, etc.)
-   */
-  category: string;
-  
-  /**
-   * The specific text that was matched.
-   */
-  matchedText: string;
-  
-  /**
-   * The confidence level of this match (0.0 to 1.0).
-   * Higher values indicate more certain matches.
-   */
-  confidence: number;
-  
-  /**
-   * Whether this is a partial match that might be combined with others.
-   */
-  isPartial: boolean;
-  
-  /**
-   * The specific properties that were set by this pattern.
-   */
-  setProperties: Set<keyof RecurrenceOptions>;
-  
-  /**
-   * Optional warnings about this pattern match.
-   */
-  warnings?: string[];
-}
-
-/**
  * Core recurrence options extracted from natural language patterns.
  * These represent both currently implemented and future planned properties.
  * 
@@ -191,8 +93,6 @@ export interface PatternHandlerResult {
 
 /**
  * Represents a matched pattern recognized in natural language text.
- * This is a more focused and standardized alternative to the PatternResult interface,
- * designed to work with the modern factory-based pattern handler approach.
  * 
  * Each pattern match contains the specific information extracted from text,
  * along with metadata to help process and evaluate the match quality.
@@ -301,9 +201,9 @@ export interface PatternMatcherConfig {
 /**
  * Modern Pattern Handler function type definition.
  * 
- * This represents the new standardized function signature for pattern handlers,
- * replacing the older interface-based approach. It processes a CompromiseJS document
- * and updates the recurrence options based on patterns found in the text.
+ * This represents the standardized function signature for pattern handlers.
+ * It processes a CompromiseJS document and updates the recurrence options 
+ * based on patterns found in the text.
  * 
  * The function returns a PatternHandlerResult indicating whether a pattern was matched
  * and providing any additional information about the match.
@@ -352,41 +252,6 @@ export interface PatternHandlerMetadata {
 }
 
 /**
- * Pattern Combiner interface defines how multiple pattern results can be combined.
- * This allows for handling complex recurrence expressions like "every Monday and the first of the month".
- */
-export interface PatternCombiner {
-  /**
-   * The name of this combiner for debugging and logging.
-   */
-  name: string;
-  
-  /**
-   * Priority of this combiner in the combination pipeline.
-   * Higher priority combiners are applied first.
-   */
-  priority: number;
-  
-  /**
-   * Determines if this combiner can combine the given pattern results.
-   * 
-   * @param pattern1 - First pattern result
-   * @param pattern2 - Second pattern result
-   * @returns true if the patterns can be combined, false otherwise
-   */
-  canCombine(pattern1: PatternResult, pattern2: PatternResult): boolean;
-  
-  /**
-   * Combines two compatible pattern results into a single result.
-   * 
-   * @param pattern1 - First pattern result
-   * @param pattern2 - Second pattern result
-   * @returns Combined pattern result
-   */
-  combine(pattern1: PatternResult, pattern2: PatternResult): PatternResult;
-}
-
-/**
  * Pattern matching configuration options to control how patterns are recognized.
  */
 export interface PatternMatchingConfig {
@@ -419,6 +284,28 @@ export interface PatternMatchingConfig {
 }
 
 /**
+ * Pattern selection configuration to control which patterns are used.
+ */
+export interface PatternSelectionConfig {
+  /**
+   * Enabled pattern categories.
+   * If empty, all patterns are enabled.
+   */
+  enabledPatterns?: string[];
+  
+  /**
+   * Disabled pattern categories.
+   * Takes precedence over enabledPatterns.
+   */
+  disabledPatterns?: string[];
+  
+  /**
+   * Custom pattern handlers to inject into the pipeline.
+   */
+  customPatterns?: ModernPatternHandler[];
+}
+
+/**
  * Pattern resolution configuration to control how conflicts are handled.
  */
 export interface PatternResolutionConfig {
@@ -443,25 +330,31 @@ export interface PatternResolutionConfig {
 }
 
 /**
- * Pattern selection configuration to control which patterns are used.
+ * Configuration options for the transformer pipeline.
+ * Controls how pattern handlers are registered and applied.
  */
-export interface PatternSelectionConfig {
+export interface TransformerConfig {
   /**
-   * Enabled pattern categories.
-   * If empty, all patterns are enabled.
+   * List of pattern handlers to apply, in priority order.
    */
-  enabledPatterns?: string[];
+  handlers: ModernPatternHandler[];
+
+  /**
+   * Whether to continue processing after a pattern match is found.
+   * Default is true, meaning all handlers are applied regardless of previous matches.
+   */
+  applyAll?: boolean;
+
+  /**
+   * Whether to apply default values for unspecified properties.
+   * Default is true.
+   */
+  applyDefaults?: boolean;
   
   /**
-   * Disabled pattern categories.
-   * Takes precedence over enabledPatterns.
+   * Complete configuration for the transformation process.
    */
-  disabledPatterns?: string[];
-  
-  /**
-   * Custom pattern handlers to inject into the pipeline.
-   */
-  customPatterns?: PatternHandler[];
+  config?: HeliosConfig;
 }
 
 /**
@@ -554,39 +447,6 @@ export type DayMapping = Record<DayString, RRule.Weekday>;
  * to their corresponding RRule frequency constants.
  */
 export type FrequencyMapping = Record<TimeUnitString, Frequency>;
-
-/**
- * Configuration options for the transformer pipeline.
- * Controls how pattern handlers are registered and applied.
- */
-export interface TransformerConfig {
-  /**
-   * List of pattern handlers to apply, in priority order.
-   */
-  handlers: PatternHandler[];
-
-  /**
-   * Whether to continue processing after a pattern match is found.
-   * Default is true, meaning all handlers are applied regardless of previous matches.
-   */
-  applyAll?: boolean;
-
-  /**
-   * Whether to apply default values for unspecified properties.
-   * Default is true.
-   */
-  applyDefaults?: boolean;
-  
-  /**
-   * List of pattern combiners to apply, in priority order.
-   */
-  combiners?: PatternCombiner[];
-  
-  /**
-   * Complete configuration for the transformation process.
-   */
-  config?: HeliosConfig;
-}
 
 /**
  * Transformation result containing the final RRule options and metadata.

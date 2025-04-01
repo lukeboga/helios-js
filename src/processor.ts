@@ -6,7 +6,7 @@
  */
 
 import { RRule } from 'rrule';
-import { RecurrenceOptions, PatternHandlerResult } from './types';
+import { RecurrenceOptions, ModernPatternHandler } from './types';
 
 // Import CompromiseJS setup and patterns
 import { setupCompromise, getDocument } from './compromise/index';
@@ -181,7 +181,9 @@ export function processRecurrencePattern(
   let highestConfidence = 0;
   
   // Order matters here - apply more specific patterns first
-  const patternHandlers = [
+  // Define handlers as ModernPatternHandler but still using the existing functions
+  // This is temporary until we implement the factory pattern
+  const patternHandlers: { name: string, handler: any }[] = [
     { name: 'frequency', handler: applyFrequencyPatterns },
     { name: 'interval', handler: applyIntervalPatterns },
     { name: 'dayOfWeek', handler: applyDayOfWeekPatterns },
