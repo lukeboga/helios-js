@@ -181,12 +181,12 @@ Based on our validation findings, we will update documentation in this priority 
    - `docs/development/nl-patterns.md`
    
 3. **Contribution Guides Consolidation**
-   - `docs/contribution-guide.md`
-   - `docs/development/contributing-guide.md`
+   - Consolidate `docs/contribution-guide.md` into `docs/development/contributing-guide.md` and remove the original file
+   - Ensure all references to the old guide are updated to point to the new location
    
 4. **Other Documentation**
-   - `docs/compromise-integration.md` (misspelling section)
-   - `docs/development/testing-guide.md`
+   - Move `docs/compromise-integration.md` to `docs/development/compromise-integration.md` and remove the original file
+   - Update `docs/development/testing-guide.md`
    - Any remaining documentation files
 
 ## Enhancement Opportunity Tracking

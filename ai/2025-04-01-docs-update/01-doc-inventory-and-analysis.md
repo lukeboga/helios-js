@@ -4,8 +4,6 @@
 
 ### Root Documentation
 - `README.md` - Main documentation entry point and navigation hub (3.6KB, 86 lines)
-- `compromise-integration.md` - Details on CompromiseJS integration, includes misspelling correction section (7.7KB, 229 lines)
-- `contribution-guide.md` - Focused guide for adding pattern handlers (5.5KB, 216 lines)
 
 ### Development Documentation Directory
 - `testing-guide.md` - Testing approach, structure, and best practices (13KB, 419 lines)
@@ -15,6 +13,7 @@
 - `nl-patterns.md` - Natural language patterns documentation (9.9KB, 234 lines)
 - `normalization-pipeline.md` - Text normalization process (14KB, 489 lines)
 - `pattern-handler-guide.md` - Guide for creating pattern handlers (17KB, 586 lines)
+- `compromise-integration.md` - Details on CompromiseJS integration, includes misspelling correction section (12KB, 380 lines)
 
 ### Public Documentation Directory
 - `advanced-usage.md` - Advanced features and customization (25KB, 940 lines)
@@ -23,12 +22,6 @@
 - `troubleshooting.md` - Troubleshooting information (10KB, 395 lines)
 
 ## 2. Key Documentation Structure Issues
-
-### Contribution Guide Duplication
-- Two separate contribution guides exist:
-  - `/docs/contribution-guide.md` - Focused specifically on adding pattern handlers
-  - `/docs/development/contributing-guide.md` - Broader contributor guide covering coding standards, workflow, testing, etc.
-- Per user instruction, these need to be cross-checked and merged into a single document in the root docs folder
 
 ### Documentation Organization
 - Clear separation between public (user-facing) and development (contributor-facing) documentation
@@ -40,10 +33,10 @@
 | Code Component | Primary Documentation | Status | Supporting Documentation |
 |----------------|-------------------|--------|------------------------|
 | Core API (`index.ts`) | `api-reference.md` | Needs verification | `getting-started.md` |
-| CompromiseJS Integration | `compromise-integration.md` | Recently updated | `development/nl-patterns.md` |
-| Pattern Handlers | `pattern-handler-guide.md` | Needs verification | `nl-patterns.md`, `contribution-guide.md` |
+| CompromiseJS Integration | `development/compromise-integration.md` | Recently updated | `development/nl-patterns.md` |
+| Pattern Handlers | `pattern-handler-guide.md` | Needs verification | `nl-patterns.md`, `contributing-guide.md` |
 | Normalization Pipeline | `normalization-pipeline.md` | Needs verification | N/A |
-| Misspelling Correction | `compromise-integration.md` | Recently added | `testing-guide.md` |
+| Misspelling Correction | `development/compromise-integration.md` | Recently added | `testing-guide.md` |
 | Day of Week Patterns | `nl-patterns.md` | Needs verification | `public/patterns.md` |
 | Day of Month Patterns | `nl-patterns.md` | Needs verification | `public/patterns.md` |
 | Frequency Patterns | `nl-patterns.md` | Needs verification | `public/patterns.md` |

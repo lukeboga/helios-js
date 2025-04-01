@@ -3,7 +3,7 @@
 This document tracks potential improvements and enhancements to the HeliosJS codebase identified during our documentation update process. These suggestions are organized by component and impact level, with a focus on three key priorities:
 
 1. **Pattern Handling & NLP Improvements**: Enhancing the core natural language processing capabilities
-2. **Code Cleanup**: Removing legacy/unused code since backward compatibility is not required
+2. **Code Cleanup**: Removing legacy/unused code (already implemented for documentation)
 3. **Code DRYness**: Eliminating duplication to improve maintainability
 
 ## HIGH PRIORITY: Pattern Handling & NLP Improvements

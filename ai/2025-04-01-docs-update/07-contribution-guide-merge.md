@@ -70,7 +70,8 @@ This structure incorporates all content from the general contribution guide, wit
    - Modernization plan for pattern handlers
 4. Add a change log at the top of the merged document
 5. Place the final document at `/docs/development/contributing-guide.md`
-6. Add a redirect notice at `/docs/contribution-guide.md` pointing to the new unified guide
+6. Delete the original file at `/docs/contribution-guide.md` as we do not need backward compatibility
+7. Update all references to the old guide in other documentation files
 
 ## Draft of the Merged Document
 
@@ -80,5 +81,5 @@ The complete draft with all merged content follows in the final implementation d
 
 Once this draft is approved, we will:
 1. Create the actual merged document at `/docs/development/contributing-guide.md`
-2. Create a redirect notice at `/docs/contribution-guide.md`
+2. Delete the original file at `/docs/contribution-guide.md`
 3. Update the progress tracking table in the implementation approach document 
