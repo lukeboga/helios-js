@@ -64,8 +64,9 @@ Throughout this implementation, we will adhere to the following principles:
 
 ### Pattern Handler Factory
 
-5. **Implement Factory Function** ([PH-001])
-   - Create `src/compromise/utils/handlerFactory.ts` with the `createPatternHandler` function:
+5. **Implement Factory Function** ([PH-001]) ⟵ **NEXT STEP**
+   - Create new file `src/compromise/utils/handlerFactory.ts` 
+   - Implement the `createPatternHandler` function:
      ```typescript
      export function createPatternHandler(
        name: string,
@@ -77,6 +78,7 @@ Throughout this implementation, we will adhere to the following principles:
      }
      ```
    - Include comprehensive error handling and logging
+   - Add unit tests for the factory function in `test/compromise/utils/handlerFactory.test.ts`
    - Reference: [Pattern Handler Factory Function](./01-pattern-handler-modernization-plan.md#1-pattern-handler-factory-function)
 
 ### Prototype Pattern Handler
