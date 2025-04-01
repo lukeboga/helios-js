@@ -17,3 +17,14 @@ export {
   yearlyMatcher,
   frequencyProcessor
 } from './frequency'; 
+
+// Export interval pattern handler and components
+export {
+  intervalPatternHandler,
+  
+  // Export individual matchers and processor for reuse
+  specialIntervalMatcher,
+  numericIntervalMatcher,
+  everyOtherMatcher,
+  intervalProcessor
+} from './interval'; 

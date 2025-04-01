@@ -26,6 +26,11 @@ const DEFAULT_HANDLER_OPTIONS = {
 };
 
 /**
+ * Symbol to use for handler name to avoid conflicts with function.name
+ */
+export const HANDLER_NAME_KEY = Symbol('handlerName');
+
+/**
  * Creates a standardized pattern handler function that follows the factory pattern.
  * 
  * @param name - Unique identifier for the pattern handler
@@ -122,12 +127,21 @@ export function createPatternHandler(
     }
   };
   
-  // Attach metadata to the handler function
+  // Attach metadata to the handler function using a symbol for the name
+  // to avoid conflicts with the function's built-in name property
   const handlerWithMetadata = Object.assign(handler, {
-    name,
+    [HANDLER_NAME_KEY]: name,
     category: handlerOptions.category,
     priority: handlerOptions.priority,
     description: handlerOptions.description || `Recognizes ${name} patterns`
+  });
+  
+  // Add a getter for the name property so that we can still access it normally
+  Object.defineProperty(handlerWithMetadata, 'name', {
+    get: function() {
+      return this[HANDLER_NAME_KEY];
+    },
+    configurable: true
   });
   
   return handlerWithMetadata;
@@ -210,12 +224,20 @@ export function createCompositeHandler(
     }
   };
   
-  // Attach metadata to the handler function
+  // Attach metadata to the handler function using a symbol for the name
   const handlerWithMetadata = Object.assign(compositeHandler, {
-    name,
+    [HANDLER_NAME_KEY]: name,
     category: handlerOptions.category,
     priority: handlerOptions.priority,
     description: handlerOptions.description || `Composite handler for ${name} patterns`
+  });
+  
+  // Add a getter for the name property
+  Object.defineProperty(handlerWithMetadata, 'name', {
+    get: function() {
+      return this[HANDLER_NAME_KEY];
+    },
+    configurable: true
   });
   
   return handlerWithMetadata;
