@@ -92,52 +92,28 @@ export interface PatternHandlerResult {
 }
 
 /**
- * Represents a matched pattern recognized in natural language text.
- * 
- * Each pattern match contains the specific information extracted from text,
- * along with metadata to help process and evaluate the match quality.
+ * PatternMatch represents a matched pattern with various attributes.
  */
 export interface PatternMatch {
-  /**
-   * The type of pattern that was matched (e.g., 'frequency', 'dayOfWeek', 'interval')
-   * Used to route the match to the appropriate processor
-   */
+  /** Type of pattern that was matched */
   type: string;
   
-  /**
-   * The extracted value from the match, which can be of various types
-   * depending on the pattern (e.g., RRule.DAILY, [RRule.MO, RRule.WE], 2)
-   */
-  value: any;
+  /** Value extracted from the pattern */
+  value: string | number | Date | null;
   
-  /**
-   * The specific text that was matched in the document
-   * Useful for debugging and providing user feedback
-   */
+  /** Original text that matched the pattern */
   text: string;
   
-  /**
-   * Optional confidence score (0.0 to 1.0) indicating how certain the match is
-   * Higher values indicate more confidence in the match
-   */
-  confidence?: number;
+  /** Confidence level of the match (0-1) */
+  confidence: number;
   
-  /**
-   * Optional array of warning messages related to this match
-   * Used to provide feedback about potential issues
-   */
+  /** Optional warning messages about the match */
   warnings?: string[];
 }
 
 /**
- * Function type for pattern matchers that identify specific patterns in text.
- * 
- * Pattern matchers examine a CompromiseJS document and extract structured
- * information about patterns found in the text. They return null if no pattern
- * is matched, or a PatternMatch object with the extracted information.
- * 
- * This function type enables a clean separation between pattern recognition
- * and pattern processing, making handlers more modular and easier to maintain.
+ * PatternMatcher function type for pattern recognition.
+ * Returns a PatternMatch object or null if no match.
  */
 export type PatternMatcher = (
   doc: CompromiseDocument, 
@@ -145,20 +121,40 @@ export type PatternMatcher = (
 ) => PatternMatch | null;
 
 /**
- * Function type for pattern processors that update recurrence options based on a match.
- * 
- * Pattern processors take a match produced by a PatternMatcher and update
- * the recurrence options accordingly. They also update the result object
- * with any warnings or additional information.
- * 
- * This separation of matcher and processor enables more flexible and
- * composable pattern handling logic.
+ * PatternProcessor function type for updating options based on matched patterns.
  */
 export type PatternProcessor = (
-  options: RecurrenceOptions,
-  match: PatternMatch,
-  result: PatternHandlerResult
-) => void;
+  options: RecurrenceOptions, 
+  match: PatternMatch
+) => RecurrenceOptions;
+
+/**
+ * Pattern Handler function type definition.
+ * Combines a matcher and processor to handle pattern recognition and processing.
+ * The function returns a PatternHandlerResult indicating whether a pattern was matched
+ * and any updates to the recurrence options.
+ */
+export type PatternHandler = (
+  doc: CompromiseDocument,
+  options: RecurrenceOptions
+) => PatternHandlerResult;
+
+/**
+ * Metadata for factory-created pattern handlers
+ */
+export interface PatternHandlerMetadata {
+  /** Unique name of the pattern handler */
+  name: string;
+  
+  /** Category the handler belongs to (e.g., "date", "frequency") */
+  category?: string;
+  
+  /** Priority level (higher numbers = higher priority) */
+  priority: number;
+  
+  /** Description of what patterns this handler recognizes */
+  description?: string;
+}
 
 /**
  * Configuration options for pattern matchers.
@@ -199,162 +195,34 @@ export interface PatternMatcherConfig {
 }
 
 /**
- * Modern Pattern Handler function type definition.
- * 
- * This represents the standardized function signature for pattern handlers.
- * It processes a CompromiseJS document and updates the recurrence options 
- * based on patterns found in the text.
- * 
- * The function returns a PatternHandlerResult indicating whether a pattern was matched
- * and providing any additional information about the match.
- * 
- * This function type will be used by the handler factory to generate consistent
- * pattern handler implementations.
- */
-export type ModernPatternHandler = (
-  doc: CompromiseDocument,
-  options: RecurrenceOptions,
-  config?: PatternMatcherConfig
-) => PatternHandlerResult;
-
-/**
- * Metadata for pattern handlers created by the factory function.
- * 
- * This provides additional information about a pattern handler that isn't
- * part of its function signature but is useful for processing and debugging.
- */
-export interface PatternHandlerMetadata {
-  /**
-   * Name of the pattern handler
-   */
-  name: string;
-  
-  /**
-   * Category the pattern handler belongs to (e.g., 'frequency', 'interval')
-   */
-  category: string;
-  
-  /**
-   * Priority of the pattern handler in the processing pipeline
-   * Higher values indicate higher priority (processed earlier)
-   */
-  priority: number;
-  
-  /**
-   * The matchers used by this pattern handler
-   */
-  matchers: PatternMatcher[];
-  
-  /**
-   * The processor function used by this pattern handler
-   */
-  processor: PatternProcessor;
-}
-
-/**
- * Pattern matching configuration options to control how patterns are recognized.
- */
-export interface PatternMatchingConfig {
-  /**
-   * Controls how strictly pattern text is matched.
-   * - strict: Exact matches only
-   * - normal: Minor variations allowed (default)
-   * - loose: Accept more variations and synonyms
-   */
-  matchingMode?: 'strict' | 'normal' | 'loose';
-  
-  /**
-   * Custom synonyms to recognize for pattern keywords.
-   * Example: { "each": "every", "fortnightly": "every 2 weeks" }
-   */
-  synonyms?: Record<string, string>;
-  
-  /**
-   * Whether to recognize patterns with spelling errors.
-   * Uses edit distance to identify likely matches.
-   */
-  allowSpellingErrors?: boolean;
-  
-  /**
-   * Maximum edit distance to consider for spelling errors.
-   * Only used when allowSpellingErrors is true.
-   * Default is 2.
-   */
-  maxEditDistance?: number;
-}
-
-/**
- * Pattern selection configuration to control which patterns are used.
+ * Pattern selection configuration for the transformer
  */
 export interface PatternSelectionConfig {
-  /**
-   * Enabled pattern categories.
-   * If empty, all patterns are enabled.
-   */
+  /** Patterns to explicitly enable */
   enabledPatterns?: string[];
   
-  /**
-   * Disabled pattern categories.
-   * Takes precedence over enabledPatterns.
-   */
+  /** Patterns to explicitly disable */
   disabledPatterns?: string[];
   
-  /**
-   * Custom pattern handlers to inject into the pipeline.
-   */
-  customPatterns?: ModernPatternHandler[];
+  /** Custom pattern handlers to include */
+  customPatterns?: PatternHandler[];
 }
 
 /**
- * Pattern resolution configuration to control how conflicts are handled.
- */
-export interface PatternResolutionConfig {
-  /**
-   * Custom priority values for pattern handlers.
-   * Higher values give higher priority.
-   */
-  patternPriorities?: Partial<Record<string, number>>;
-  
-  /**
-   * Resolution strategy when patterns conflict.
-   * - first: Use first pattern found (based on priority)
-   * - all: Try to combine all patterns (default)
-   * - mostSpecific: Use the most specific pattern
-   */
-  conflictResolution?: 'first' | 'all' | 'mostSpecific';
-  
-  /**
-   * Whether later patterns can override earlier patterns.
-   */
-  allowOverrides?: boolean;
-}
-
-/**
- * Configuration options for the transformer pipeline.
- * Controls how pattern handlers are registered and applied.
+ * Configuration options for the transformer
  */
 export interface TransformerConfig {
-  /**
-   * List of pattern handlers to apply, in priority order.
-   */
-  handlers: ModernPatternHandler[];
-
-  /**
-   * Whether to continue processing after a pattern match is found.
-   * Default is true, meaning all handlers are applied regardless of previous matches.
-   */
+  /** Pattern handlers to use */
+  handlers: PatternHandler[];
+  
+  /** Whether to apply all handlers or stop on first match */
   applyAll?: boolean;
-
-  /**
-   * Whether to apply default values for unspecified properties.
-   * Default is true.
-   */
+  
+  /** Whether to apply default values */
   applyDefaults?: boolean;
   
-  /**
-   * Complete configuration for the transformation process.
-   */
-  config?: HeliosConfig;
+  /** Configuration options for pattern matchers */
+  config?: PatternMatcherConfig;
 }
 
 /**
@@ -479,4 +347,60 @@ export interface TransformationResult extends RRuleOptions {
  */
 export interface SynonymMapping {
   [synonym: string]: string;
+}
+
+/**
+ * Pattern matching configuration options to control how patterns are recognized.
+ */
+export interface PatternMatchingConfig {
+  /**
+   * Controls how strictly pattern text is matched.
+   * - strict: Exact matches only
+   * - normal: Minor variations allowed (default)
+   * - loose: Accept more variations and synonyms
+   */
+  matchingMode?: 'strict' | 'normal' | 'loose';
+  
+  /**
+   * Custom synonyms to recognize for pattern keywords.
+   * Example: { "each": "every", "fortnightly": "every 2 weeks" }
+   */
+  synonyms?: Record<string, string>;
+  
+  /**
+   * Whether to recognize patterns with spelling errors.
+   * Uses edit distance to identify likely matches.
+   */
+  allowSpellingErrors?: boolean;
+  
+  /**
+   * Maximum edit distance to consider for spelling errors.
+   * Only used when allowSpellingErrors is true.
+   * Default is 2.
+   */
+  maxEditDistance?: number;
+}
+
+/**
+ * Pattern resolution configuration to control how conflicts are handled.
+ */
+export interface PatternResolutionConfig {
+  /**
+   * Custom priority values for pattern handlers.
+   * Higher values give higher priority.
+   */
+  patternPriorities?: Partial<Record<string, number>>;
+  
+  /**
+   * Resolution strategy when patterns conflict.
+   * - first: Use first pattern found (based on priority)
+   * - all: Try to combine all patterns (default)
+   * - mostSpecific: Use the most specific pattern
+   */
+  conflictResolution?: 'first' | 'all' | 'mostSpecific';
+  
+  /**
+   * Whether later patterns can override earlier patterns.
+   */
+  allowOverrides?: boolean;
 }

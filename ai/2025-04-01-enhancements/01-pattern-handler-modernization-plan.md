@@ -1,6 +1,24 @@
 # Pattern Handler Modernization Plan
 
-This document outlines a comprehensive plan for modernizing the pattern handler system in HeliosJS. It analyzes current implementations, proposes a standardized approach, and provides a step-by-step modernization process.
+This document outlines a plan to modernize the pattern handler architecture in the HeliosJS library to improve code quality, maintainability, and developer experience.
+
+## Core Principles
+
+1. **Functional Approach**: Use a function-based approach with factory patterns instead of class-based/interface-based patterns.
+   
+2. **Separation of Concerns**: Split pattern handling into distinct matcher and processor functions for better testability and maintenance.
+   
+3. **Type Safety**: Provide comprehensive type definitions to ensure consistent usage and catch errors early.
+   
+4. **Consistent Structure**: Standardize the structure of all pattern handlers to make the codebase more predictable.
+   
+5. **Developer Experience**: Make it easy for developers to add new pattern handlers with minimal boilerplate.
+
+6. **Meaningful Naming**: Ensure all declarations have clear, purpose-focused names that describe what they are or what they do, rather than using abstract or temporal qualifiers (like "Modern" or "Updated").
+
+## Core Architecture Components
+
+The modernized pattern handler architecture will have these key components:
 
 ## Current Implementation Analysis
 

@@ -17,6 +17,8 @@ Throughout this implementation, we will adhere to the following principles:
 
 3. **Documentation Synchronization**: All documentation will be updated to reflect only the current implementation approach, with no references to removed legacy code.
 
+4. **Meaningful Naming**: All types, functions, variables, and other declarations should have meaningful names that clearly indicate their purpose or behavior. Abstract or temporal naming patterns (like "Modern" or "Updated") should be avoided in favor of descriptive, purpose-focused names that will remain relevant over time.
+
 ## Preparation Phase (1-2 days)
 
 ### Version Control Setup
@@ -53,12 +55,12 @@ Throughout this implementation, we will adhere to the following principles:
      - `PatternMatch`: Structured data from pattern matching
      - `PatternMatcher`: Function type for pattern recognition
      - `PatternProcessor`: Function type for updating options based on matches
-     - `ModernPatternHandler`: Standardized function-based handler
+     - `PatternHandler`: Standardized function-based handler
      - `PatternHandlerMetadata`: Metadata for factory-created handlers
      - `PatternMatcherConfig`: Type-safe configuration options
    - Completely removed legacy interfaces: `PatternHandler`, `PatternResult`, `PatternMatchMetadata`, and `PatternCombiner`
    - Moved `PatternHandlerResult` from processor.ts to types.ts to avoid circular dependencies
-   - Updated dependent interfaces to use `ModernPatternHandler` instead of `PatternHandler`
+   - Updated dependent interfaces to use `PatternHandler` instead of the older interfaces
    - Reference: [Pattern Matcher Interface](./01-pattern-handler-modernization-plan.md#2-pattern-matcher-interface) and [Pattern Processor Interface](./01-pattern-handler-modernization-plan.md#3-pattern-processor-interface)
    - Completed: April 2025
 
@@ -73,7 +75,7 @@ Throughout this implementation, we will adhere to the following principles:
        matchers: PatternMatcher[],
        processor: PatternProcessor,
        options?: { category?: string, priority?: number }
-     ): ModernPatternHandler {
+     ): PatternHandler {
        // Implementation as defined in modernization plan
      }
      ```
