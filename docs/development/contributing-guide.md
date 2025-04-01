@@ -5,6 +5,7 @@
 > - [April 2025]: Added pattern handler development guidelines
 > - [April 2025]: Updated file structure to reflect current repository organization
 > - [April 2025]: Added section on modern pattern handler architecture
+> - [April 2025]: Added reference to the documentation process guide
 
 This guide provides essential information for contributors to the HeliosJS project.
 
@@ -289,8 +290,11 @@ Refer to the [Testing Guide](./testing-guide.md) for detailed information on:
 
 ## Documentation
 
-When making changes, update the relevant documentation:
+When making changes, update the relevant documentation following the guidelines in the [Documentation Process Guide](./documentation-process.md).
 
+The Documentation Process requires that **all code changes must include corresponding documentation updates** in the same PR. This ensures that documentation stays synchronized with the codebase.
+
+Key documentation requirements:
 - **Code Documentation**: Add JSDoc comments to functions and classes
 - **API Reference**: Update the API documentation
 - **Usage Examples**: Provide examples for new features
