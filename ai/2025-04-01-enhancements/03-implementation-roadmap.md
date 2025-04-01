@@ -218,11 +218,43 @@ Throughout this implementation, we will adhere to the following principles:
     - Implement integration tests for the full processing pipeline
     - Reference: [PT-002] in [Enhancement Traceability Matrix](./02-enhancement-traceability-matrix.md#pt-002-test-coverage-gaps)
 
-## Phase 5: Documentation & Cleanup (3-5 days)
+## Phase 5: Legacy Code Cleanup (2-3 days)
+
+### Comprehensive Codebase Audit
+
+25. **Conduct Full Codebase Audit**
+    - Systematically search for references to deprecated interfaces, types, and functions
+    - Identify any remaining instances of legacy pattern handlers
+    - Create a comprehensive inventory of all code to be removed
+    - Reference: [Implementation Principle 1: ZERO Backward Compatibility](#implementation-principles)
+
+26. **Remove Legacy Code and References**
+    - Delete all identified legacy code and deprecated functions
+    - Remove any remaining compatibility layers or wrappers
+    - Eliminate commented-out code that references old implementations
+    - Reference: [Implementation Principle 1: ZERO Backward Compatibility](#implementation-principles)
+
+### Documentation Purging
+
+27. **Purge Documentation of Legacy References**
+    - Audit all documentation files for references to removed code
+    - Update examples to use only the current implementation approach
+    - Remove sections that explain deprecated features or migration paths
+    - Reference: [Implementation Principle 3: Documentation Synchronization](#implementation-principles)
+
+### Test Code Cleanup
+
+28. **Update Test Suite**
+    - Remove tests for deleted functionality
+    - Ensure all tests use the new pattern handler approach
+    - Update test utilities to remove legacy support
+    - Reference: [Implementation Principle 1: ZERO Backward Compatibility](#implementation-principles)
+
+## Phase 6: Documentation & Refinement (3-5 days)
 
 ### Configuration Options
 
-25. **Clean Up Configuration Options** ([CL-004], [CL-005])
+29. **Clean Up Configuration Options** ([CL-004], [CL-005])
     - Remove or implement unused configuration options
     - Document all available options
     - Create specific configuration interfaces
@@ -230,12 +262,12 @@ Throughout this implementation, we will adhere to the following principles:
 
 ### Advanced Documentation
 
-26. **Enhance Public API Documentation** ([DOC-001])
+30. **Enhance Public API Documentation** ([DOC-001])
     - Add sections on extending the library
     - Create step-by-step examples for custom pattern handlers
     - Reference: [DOC-001] in [Enhancement Traceability Matrix](./02-enhancement-traceability-matrix.md#doc-001-public-api-documentation-for-advanced-usage)
 
-27. **Improve Documentation Navigation** ([DOC-002])
+31. **Improve Documentation Navigation** ([DOC-002])
     - Add "Related Topics" sections
     - Implement consistent cross-linking
     - Create improved navigation aids
@@ -243,17 +275,17 @@ Throughout this implementation, we will adhere to the following principles:
 
 ## Final Review and Release
 
-28. **Conduct Final Review**
+32. **Conduct Final Review**
     - Verify all enhancement items have been addressed
     - Confirm documentation is complete and accurate
     - Validate test coverage and performance metrics
 
-29. **Prepare for Release**
+33. **Prepare for Release**
     - Create release notes
     - Update version numbers
     - Finalize documentation
 
-30. **Plan Next Enhancement Cycle**
+34. **Plan Next Enhancement Cycle**
     - Identify any remaining or new enhancement opportunities
     - Prioritize next steps
     - Create timeline for future enhancements
@@ -274,7 +306,8 @@ Throughout the implementation process, maintain the following:
 - **Phase 2**: 3-5 days
 - **Phase 3**: 3-5 days
 - **Phase 4**: 5-7 days
-- **Phase 5**: 3-5 days
+- **Phase 5**: 2-3 days
+- **Phase 6**: 3-5 days
 - **Final Review**: 2-3 days
 
-Total estimated implementation time: 20-32 days (4-6 weeks)
+Total estimated implementation time: 22-35 days (4-7 weeks)
