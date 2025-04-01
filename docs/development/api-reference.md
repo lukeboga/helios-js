@@ -1,5 +1,12 @@
 # API Reference
 
+> **Change Log**:  
+> - [April 2025]: Updated return type definitions for `naturalLanguageToRRule`
+> - [April 2025]: Corrected parameter types from `TransformerConfig` to `RecurrenceProcessorOptions`
+> - [April 2025]: Updated interface definitions to match implementation
+> - [April 2025]: Revised configuration options documentation
+> - [April 2025]: Updated code examples for accuracy
+
 This document provides detailed documentation for all exported functions, interfaces, and configuration options in Helios-JS. It serves as a technical reference for developers who want to integrate or extend the library.
 
 ## Core Functions
@@ -12,19 +19,19 @@ Converts a natural language recurrence pattern to an RRule options object.
 function naturalLanguageToRRule(
   startDate: Date,
   recurrencePattern: string,
-  config?: Partial<TransformerConfig>
-): RRuleOptions & TransformationResult
+  config?: Partial<RecurrenceProcessorOptions>
+): MinimalRRuleOptions | null
 ```
 
 **Parameters:**
 
 - `startDate`: The start date for the recurrence pattern (required)
 - `recurrencePattern`: Natural language description (e.g., "every 2 weeks") (required)
-- `config`: Optional configuration for the transformation process
+- `config`: Optional configuration for the recurrence processing
 
 **Returns:**
 
-An object containing RRule options and transformation metadata.
+An object containing RRule options that can be used with the RRule constructor, or `null` if the pattern couldn't be processed.
 
 **Example:**
 
@@ -33,12 +40,19 @@ import { naturalLanguageToRRule } from 'helios-js';
 
 // Get RRule options for weekly recurrence on Mondays
 const options = naturalLanguageToRRule(new Date(), "every monday");
+if (options) {
+  // options contains freq, interval, byweekday etc.
+  console.log(`Frequency: ${options.freq}, Interval: ${options.interval}`);
+}
 
 // With end date in the pattern
 const optionsWithEnd = naturalLanguageToRRule(
   new Date(), 
   "every monday until December 31, 2023"
 );
+if (optionsWithEnd && optionsWithEnd.until) {
+  console.log(`End date: ${optionsWithEnd.until.toDateString()}`);
+}
 ```
 
 ### `createRRule`
@@ -49,19 +63,19 @@ Creates an RRule instance from a natural language recurrence pattern.
 function createRRule(
   startDate: Date,
   recurrencePattern: string,
-  config?: Partial<TransformerConfig>
-): RRule
+  config?: Partial<RecurrenceProcessorOptions>
+): RRule | null
 ```
 
 **Parameters:**
 
 - `startDate`: The start date for the recurrence pattern (required)
 - `recurrencePattern`: Natural language description (e.g., "every Monday") (required)
-- `config`: Optional configuration for the transformation process
+- `config`: Optional configuration for the recurrence processing
 
 **Returns:**
 
-An RRule instance configured according to the natural language pattern.
+An RRule instance configured according to the natural language pattern, or `null` if the pattern couldn't be processed.
 
 **Example:**
 
@@ -70,15 +84,19 @@ import { createRRule } from 'helios-js';
 
 // Create a rule for every Monday
 const rule = createRRule(new Date(), "every monday");
-
-// Get the next 5 occurrences
-const nextFive = rule.all((date, i) => i < 5);
+if (rule) {
+  // Get the next 5 occurrences
+  const nextFive = rule.all((date, i) => i < 5);
+}
 
 // With an end date in the pattern
 const ruleWithEnd = createRRule(
   new Date(), 
   "every monday until December 31, 2023"
 );
+if (ruleWithEnd) {
+  console.log("Rule has end date:", ruleWithEnd.options.until);
+}
 ```
 
 ### `validatePattern`
@@ -88,14 +106,14 @@ Validates if a natural language pattern can be parsed correctly.
 ```typescript
 function validatePattern(
   pattern: string,
-  config?: Partial<TransformerConfig>
+  config?: Partial<RecurrenceProcessorOptions>
 ): ValidationResult
 ```
 
 **Parameters:**
 
 - `pattern`: The natural language pattern to validate (required)
-- `config`: Optional configuration for the transformation process
+- `config`: Optional configuration for the recurrence processing
 
 **Returns:**
 
@@ -111,7 +129,6 @@ const result = validatePattern("every monday and fridays");
 
 if (result.valid) {
   console.log("Pattern is valid with confidence:", result.confidence);
-  console.log("Matched patterns:", result.matchedPatterns);
 } else {
   console.log("Pattern is invalid:", result.warnings);
 }
@@ -280,36 +297,32 @@ const options = {
 
 ## Interfaces
 
-### `TransformerConfig`
+### `RecurrenceProcessorOptions`
 
 ```typescript
-interface TransformerConfig {
+interface RecurrenceProcessorOptions {
   /**
-   * List of pattern handlers to apply, in priority order.
+   * Whether to use cached results
+   * Default: true
    */
-  handlers: PatternHandler[];
-
-  /**
-   * Whether to continue processing after a pattern match is found.
-   * Default is true, meaning all handlers are applied regardless of previous matches.
-   */
-  applyAll?: boolean;
-
-  /**
-   * Whether to apply default values for unspecified properties.
-   * Default is true.
-   */
-  applyDefaults?: boolean;
+  useCache?: boolean;
   
   /**
-   * List of pattern combiners to apply, in priority order.
+   * Force specific pattern handlers to be used (by name)
+   * Example: ['frequency', 'dayOfWeek']
    */
-  combiners?: PatternCombiner[];
+  forceHandlers?: string[];
   
   /**
-   * Complete configuration for the transformation process.
+   * Default options to apply to the result
    */
-  config?: HeliosConfig;
+  defaults?: Partial<RecurrenceOptions>;
+  
+  /**
+   * Whether to correct misspellings in the input pattern
+   * Default: true
+   */
+  correctMisspellings?: boolean;
 }
 ```
 
@@ -393,66 +406,32 @@ interface ValidationResult {
    * Array of warnings or error messages
    */
   warnings: string[];
-  
-  /**
-   * Array of pattern types that were matched
-   */
-  matchedPatterns: string[];
 }
 ```
 
-### `TransformationResult`
+### `MinimalRRuleOptions`
 
 ```typescript
-interface TransformationResult extends RRuleOptions {
+interface MinimalRRuleOptions {
   /**
-   * List of pattern types that were matched during transformation.
-   * Useful for debugging and understanding how the input was interpreted.
+   * The frequency of the recurrence (DAILY, WEEKLY, etc.)
    */
-  matchedPatterns?: string[];
-
-  /**
-   * Any warnings generated during transformation, such as ambiguous
-   * or potentially conflicting patterns.
-   */
-  warnings?: string[];
+  freq: Frequency;
   
   /**
-   * Confidence score of the transformation (0.0 to 1.0).
-   * Higher values indicate more certain interpretations.
+   * Start date for the recurrence
    */
-  confidence?: number;
-}
-```
-
-### `PatternHandler`
-
-```typescript
-interface PatternHandler {
+  dtstart?: Date;
+  
   /**
-   * Applies pattern recognition to input text and returns a result if the pattern matches.
-   * 
-   * @param input - Normalized recurrence pattern string
-   * @returns PatternResult if a pattern was matched, null otherwise
+   * Interval between occurrences (e.g., 1 for every occurrence, 2 for every other)
    */
-  apply(input: string): PatternResult | null;
-
+  interval?: number;
+  
   /**
-   * The priority of this pattern handler in the transformation pipeline.
-   * Higher priority handlers are executed first.
+   * Additional RRule properties that may be set
    */
-  priority: number;
-
-  /**
-   * Descriptive name of the pattern handler for debugging and logging.
-   */
-  name: string;
-
-  /**
-   * The category this pattern handler belongs to.
-   * Used for enabling/disabling groups of related patterns.
-   */
-  category: string;
+  [key: string]: any;
 }
 ```
 
@@ -462,25 +441,26 @@ interface PatternHandler {
 
 Helios-JS uses these pattern handlers by default, applied in priority order:
 
-1. `intervalPatternHandler`: Recognizes interval patterns like "every 2 weeks"
-2. `frequencyPatternHandler`: Recognizes basic frequency terms like "daily", "weekly"
+1. `frequencyPatternHandler`: Recognizes basic frequency terms like "daily", "weekly"
+2. `intervalPatternHandler`: Recognizes interval patterns like "every 2 weeks"
 3. `dayOfWeekPatternHandler`: Recognizes day-based patterns like "every Monday"
 4. `dayOfMonthPatternHandler`: Recognizes month day patterns like "1st of the month"
 5. `untilDatePatternHandler`: Recognizes end date specifications like "until December 31st"
 
 ### Default Configuration
 
-The default configuration for the transformer is:
+The default processor options are:
 
 ```typescript
-const defaultConfig: TransformerConfig = {
-  handlers: patternHandlers, // All standard handlers in priority order
-  applyAll: true,            // Apply all handlers
-  applyDefaults: true        // Apply default values for missing properties
+const defaultOptions: RecurrenceProcessorOptions = {
+  useCache: true,            // Use pattern cache
+  correctMisspellings: true, // Auto-correct misspellings
+  forceHandlers: undefined,  // Use all pattern handlers
+  defaults: undefined        // No default values
 };
 ```
 
-### Default Options
+### Default Normalizer Options
 
 The default options for the normalizer are:
 
@@ -498,122 +478,26 @@ const defaultOptions: NormalizerOptions = {
 };
 ```
 
-## Creating Custom Pattern Handlers
+## Customizing Pattern Recognition
 
-You can extend Helios-JS with custom pattern handlers:
+You can configure the recurrence processor with custom options:
 
 ```typescript
-import { PatternHandler, PatternResult, PATTERN_PRIORITY } from 'helios-js';
+// Configuration example with available options
+import { createRRule } from 'helios-js';
 
-// Create a custom pattern handler
-const customPatternHandler: PatternHandler = {
-  name: 'customPattern',
-  category: 'custom',
-  priority: PATTERN_PRIORITY.FREQUENCY, // Same priority as frequency patterns
+const config = {
+  // Whether to use cached results (default: true)
+  useCache: true,
   
-  apply(input: string): PatternResult | null {
-    // Your pattern matching logic here
-    if (input.includes('custom pattern')) {
-      // Return a pattern result if matched
-      return {
-        options: {
-          freq: RRule.DAILY,
-          interval: 1,
-          // Other options...
-        },
-        metadata: {
-          patternName: this.name,
-          category: this.category,
-          matchedText: input,
-          confidence: 1.0,
-          isPartial: false,
-          setProperties: new Set(['freq', 'interval'])
-        }
-      };
-    }
-    
-    // Return null if no match
-    return null;
-  }
-};
-
-// Use the custom handler
-const config = {
-  handlers: [...patternHandlers, customPatternHandler]
-};
-
-const options = naturalLanguageToRRule(new Date(), "my custom pattern", config);
-```
-
-## Advanced Configuration
-
-### Customizing Pattern Recognition
-
-You can configure pattern recognition behavior:
-
-```typescript
-import { createRRule } from 'helios-js';
-
-const config = {
-  config: {
-    matching: {
-      matchingMode: 'loose',        // 'strict', 'normal', or 'loose'
-      allowSpellingErrors: true,    // Allow for spelling errors
-      maxEditDistance: 2,           // Maximum edit distance for spelling errors
-      synonyms: {                   // Custom synonyms
-        'fortnightly': 'every 2 weeks',
-        'quarterly': 'every 3 months'
-      }
-    }
-  }
-};
-
-const rule = createRRule(new Date(), "fortnightly", config);
-```
-
-### Customizing Pattern Resolution
-
-You can configure how patterns are combined and resolved:
-
-```typescript
-import { createRRule } from 'helios-js';
-
-const config = {
-  config: {
-    resolution: {
-      conflictResolution: 'mostSpecific', // 'first', 'all', or 'mostSpecific'
-      allowOverrides: true,              // Allow later patterns to override earlier ones
-      patternPriorities: {               // Custom priorities
-        'dayOfWeek': 400,               // Give day patterns higher priority
-        'frequency': 300
-      }
-    }
-  }
-};
-
-const rule = createRRule(new Date(), "every monday and daily", config);
-```
-
-### Enabling/Disabling Pattern Categories
-
-You can selectively enable or disable pattern categories:
-
-```typescript
-import { createRRule } from 'helios-js';
-
-const config = {
-  config: {
-    patterns: {
-      // Only use these pattern categories
-      enabledPatterns: ['frequency', 'dayOfWeek'],
-      
-      // Explicitly disable these categories (takes precedence)
-      disabledPatterns: ['untilDate'],
-      
-      // Add custom pattern handlers
-      customPatterns: [myCustomHandler]
-    }
-  }
+  // Only apply specific pattern handlers
+  forceHandlers: ['frequency', 'dayOfWeek'],
+  
+  // Set default values for the result
+  defaults: { count: 10 },
+  
+  // Disable misspelling correction (default: true)
+  correctMisspellings: false
 };
 
 const rule = createRRule(new Date(), "every monday", config);
@@ -627,14 +511,19 @@ Helios-JS provides detailed warnings and error messages:
 try {
   const options = naturalLanguageToRRule(new Date(), "every mon and fridays");
   
-  // Check for warnings even on successful parsing
-  if (options.warnings && options.warnings.length > 0) {
-    console.warn("Warnings:", options.warnings);
-  }
-  
-  // Check confidence of match
-  if (options.confidence < 0.7) {
-    console.warn("Low confidence match:", options.confidence);
+  // Check if options is not null
+  if (options) {
+    // Check for warnings even on successful parsing
+    if (options.warnings && options.warnings.length > 0) {
+      console.warn("Warnings:", options.warnings);
+    }
+    
+    // Check confidence of match
+    if (options.confidence && options.confidence < 0.7) {
+      console.warn("Low confidence match:", options.confidence);
+    }
+  } else {
+    console.warn("Couldn't process the pattern");
   }
 } catch (error) {
   console.error("Failed to parse pattern:", error.message);
@@ -651,13 +540,9 @@ export type { Options as RRuleOptions } from 'rrule';
 
 // Internal types
 export type { 
-  TransformerConfig,
+  RecurrenceProcessorOptions,
   NormalizerOptions,
-  TransformationResult,
   ValidationResult,
-  PatternHandler,
-  PatternResult,
-  PatternMatchMetadata,
   RecurrenceOptions
 };
 ```
@@ -671,7 +556,10 @@ import { naturalLanguageToRRule } from 'helios-js';
 import { RRule } from 'rrule';
 
 const options = naturalLanguageToRRule(new Date(), "every monday");
-const rule = new RRule(options);
+if (options) {
+  const rule = new RRule(options);
+  console.log("Next occurrence:", rule.after(new Date()));
+}
 ```
 
 For full documentation on what you can do with the resulting RRule object, see the [RRule documentation](https://github.com/jakubroztocil/rrule). 

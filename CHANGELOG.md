@@ -13,9 +13,9 @@
   - Performance benchmarking tool in `test/benchmark-compromise.ts`
   - Debug utilities to compare output with original transformer
   - Documentation:
-    - Integration guide in `docs/compromise-integration.md`
-    - Migration guide in `docs/migration-guide.md`
-    - Contribution guide in `docs/contribution-guide.md`
+    - Integration guide in `docs/development/compromise-integration.md`
+    - Pattern handler guide in `docs/development/pattern-handler-guide.md`
+    - Contributing guide in `docs/development/contributing-guide.md`
 
 ### Changed
 - Updated `transformer.ts` to delegate to the new CompromiseJS processor

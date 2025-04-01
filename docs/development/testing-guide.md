@@ -1,419 +1,332 @@
 # Testing Guide for HeliosJS
 
-This guide provides comprehensive documentation on the testing approach, structure, and best practices for the HeliosJS library.
+> **Change Log**:  
+> - [April 2025]: Updated test directory structure details
+> - [April 2025]: Added pattern handler test examples
+> - [April 2025]: Updated file paths to reflect current repository structure
+> - [April 2025]: Expanded coverage section with specifics on what to test
+
+This guide outlines the testing approach, structure, and best practices for the HeliosJS library.
+
+## Overview
+
+HeliosJS uses [Vitest](https://vitest.dev/) as its testing framework. The test suite is organized into:
+
+- **Unit tests**: Testing individual functions and components in isolation
+- **Integration tests**: Testing interactions between multiple components
+- **Debug tests**: Manual verification tests for specific scenarios
 
 ## Test Directory Structure
 
-The test directory is organized to clearly separate different types of tests and utilities:
-
 ```
 test/
-├── unit/                  # Unit tests for individual components
-│   ├── compromise/        # Tests for CompromiseJS integration
-│   │   ├── patterns.test.ts           # Comprehensive pattern handler tests
-│   │   ├── compromise.test.ts         # Core processor tests
-│   │   ├── untilDate.debug.test.ts    # Debug tests for until date patterns
-│   │   └── dayOfMonth.debug.test.ts   # Debug tests for day of month patterns
-│   └── patterns/          # Tests for legacy pattern handlers
-├── integration/           # Integration tests for public APIs
-│   └── compromise/        # Integration tests for CompromiseJS APIs
-├── debug/                 # Debugging tools and test scripts
-│   ├── compromise-debug.ts            # Debug script for processor output
-│   ├── pattern-combo.debug.test.ts    # Debug tests for pattern combinations
-│   └── untilDate.debug.test.ts        # Debug tests for until date handling
-├── utils/                 # Utility scripts and benchmarks
-│   ├── benchmark-compromise.ts        # Performance benchmarks
-│   ├── fuzzy-match.test.ts            # Fuzzy matching tests
-│   └── simple-test.ts                 # Simple validation script
-└── compromise-api.test.ts # Public API tests for the compromise integration
+├── unit/
+│   ├── core/              # Core function tests
+│   ├── compromise/        # Pattern handler tests
+│   │   ├── frequency/     # Frequency pattern tests
+│   │   ├── dayOfWeek/     # Day of week pattern tests
+│   │   ├── dayOfMonth/    # Day of month pattern tests
+│   │   ├── interval/      # Interval pattern tests
+│   │   ├── endDate/       # End date pattern tests
+│   │   └── combined/      # Tests for combined patterns
+│   ├── utils/             # Utility function tests
+│   └── normalization/     # Text normalization tests
+├── integration/           # Integration tests
+├── debug/                 # Manual verification tests
+└── fixtures/              # Test fixtures and test data
 ```
-
-## Testing Framework
-
-HeliosJS uses [Vitest](https://vitest.dev/) for testing, which provides a Jest-compatible API with better performance and TypeScript integration. Key features used include:
-
-- `describe`/`it` blocks for organizing tests
-- `expect` assertions with a rich set of matchers
-- Test filtering with pattern matching
-- Watch mode for development
-- Coverage reporting
-
-## Test Types
-
-### Unit Tests
-
-Located in `/test/unit`, these tests focus on testing individual components in isolation to verify they work correctly on their own. Unit tests should:
-
-- Focus on a single function, class, or module
-- Mock dependencies when necessary
-- Test edge cases and error handling
-- Be fast and deterministic
-
-Example:
-
-```typescript
-// test/unit/compromise/patterns.test.ts
-describe('Frequency Pattern Handler', () => {
-  describe('Basic Frequencies', () => {
-    it('should recognize "daily" pattern', () => {
-      const result = processRecurrencePattern('daily');
-      
-      expect(result).not.toBeNull();
-      if (result) {
-        expect(result.freq).toBe(RRule.DAILY);
-        expect(result.interval).toBe(1);
-        expect(result.confidence).toBeGreaterThan(0.9);
-      }
-    });
-    
-    // More tests...
-  });
-});
-```
-
-### Integration Tests
-
-Located in `/test/integration`, these tests verify that different components work together correctly. They focus on testing:
-
-- Public API behavior
-- Component interactions
-- End-to-end workflows
-- Real-world usage scenarios
-
-Example:
-
-```typescript
-// test/integration/compromise/api.test.ts
-describe('CompromiseJS API Integration', () => {
-  it('should create RRule from pattern', () => {
-    const startDate = new Date(2023, 0, 1);
-    const rule = createRRule(startDate, 'every monday');
-    
-    expect(rule).not.toBeNull();
-    if (rule) {
-      // Verify rule properties
-      expect(rule.options.freq).toBe(RRule.WEEKLY);
-      expect(rule.options.byweekday).toContain(RRule.MO);
-      
-      // Verify next occurrences
-      const nextDates = rule.all((date, i) => i < 3);
-      expect(nextDates.length).toBe(3);
-      expect(nextDates[0].getDay()).toBe(1); // Monday is day 1
-    }
-  });
-});
-```
-
-### Debug Tests
-
-Located in `/test/debug`, these tests help diagnose specific issues and verify complex behaviors. They often include more detailed logging and specialized assertions. Debug tests are useful during development but aren't necessarily part of the main test suite.
-
-Example:
-
-```typescript
-// test/debug/untilDate.debug.test.ts
-describe('Until Date Pattern Debug', () => {
-  it('processes "until December 31, 2022"', () => {
-    const result = processRecurrencePattern('until December 31, 2022');
-    console.log('Result:', result); // Detailed logging for debugging
-    
-    expect(result).not.toBeNull();
-    if (result) {
-      expect(result.until).toBeInstanceOf(Date);
-      expect(result.until?.getFullYear()).toBe(2022);
-      expect(result.until?.getMonth()).toBe(11); // December is 11 (0-indexed)
-      expect(result.until?.getDate()).toBe(31);
-    }
-  });
-});
-```
-
-### Benchmark Tests
-
-Located in `/test/utils`, these tests measure the performance of different implementations and help identify bottlenecks.
-
-Example:
-
-```typescript
-// test/utils/benchmark-compromise.ts
-function runBenchmark(name, fn, patterns, iterations = 100) {
-  console.log(`\nRunning benchmark: ${name}`);
-  
-  const startTime = performance.now();
-  
-  // Run the benchmark
-  for (let i = 0; i < iterations; i++) {
-    for (const pattern of patterns) {
-      fn(pattern);
-    }
-  }
-  
-  const endTime = performance.now();
-  const totalTime = endTime - startTime;
-  const averageTime = totalTime / (patterns.length * iterations);
-  
-  console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
-  console.log(`  Average time per pattern: ${averageTime.toFixed(4)}ms`);
-}
-```
-
-## Naming Conventions
-
-We follow these naming conventions for test files:
-
-- Unit and Integration tests: `*.test.ts`
-- Debug tests: `*.debug.test.ts`
-- Utility scripts: `*.ts`
 
 ## Running Tests
 
-### Running All Tests
+To run the test suite:
 
 ```bash
-npm run test:unit
+# Run all tests
+npm test
+
+# Run specific test files
+npm test -- unit/compromise/frequency
+
+# Run tests in watch mode (for development)
+npm test -- --watch
+
+# Run tests with coverage
+npm test -- --coverage
 ```
 
-### Running Specific Tests
+## Writing Tests
 
-```bash
-# Run specific test file
-npm run test:unit -- test/unit/compromise/patterns.test.ts
+### Basic Test Structure
 
-# Run tests matching a pattern
-npm run test:unit -- --run "Frequency Pattern"
-
-# Run all tests in a directory
-npm run test:unit -- test/unit/compromise
-```
-
-### Watch Mode
-
-During development, you can use watch mode to automatically rerun tests when files change:
-
-```bash
-npm run test:unit -- --watch
-```
-
-### Coverage Reports
-
-To generate test coverage reports:
-
-```bash
-npm run test:unit -- --coverage
-```
-
-## Testing Best Practices
-
-### 1. Test Structure
-
-- Use `describe` blocks to group related tests
-- Use nested `describe` blocks for sub-categories
-- Write clear test names that describe expected behavior
-- Follow the AAA pattern (Arrange, Act, Assert)
-
-Example of good structure:
+Tests should follow this structure:
 
 ```typescript
-describe('Day of Week Pattern Handler', () => {
-  describe('Simple Day Patterns', () => {
-    it('should recognize "every monday"', () => {
-      // Test implementation
-    });
+import { describe, it, expect } from 'vitest';
+import { functionToTest } from '../../src/path/to/function';
+
+describe('functionToTest', () => {
+  it('should handle basic case', () => {
+    const result = functionToTest('input');
+    expect(result).toBe('expected output');
+  });
+
+  it('should handle edge case', () => {
+    const result = functionToTest('edge input');
+    expect(result).toEqual({ complex: 'output' });
+  });
+
+  // Add more test cases as needed
+});
+```
+
+### Testing Pattern Handlers
+
+When testing pattern handlers, follow this structure:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { processRecurrencePattern } from '../../../src';
+import { RRule } from 'rrule';
+
+describe('Frequency Pattern Handler', () => {
+  it('should recognize "daily" pattern', () => {
+    const result = processRecurrencePattern('daily');
     
-    it('should recognize plural forms like "mondays"', () => {
-      // Test implementation
-    });
+    expect(result).not.toBeNull();
+    expect(result?.options.freq).toBe(RRule.DAILY);
   });
   
-  describe('Multiple Day Patterns', () => {
-    it('should recognize "monday and friday"', () => {
-      // Test implementation
+  it('should set appropriate defaults', () => {
+    const result = processRecurrencePattern('every day');
+    
+    expect(result).not.toBeNull();
+    expect(result?.options.freq).toBe(RRule.DAILY);
+    expect(result?.options.interval).toBe(1);
+  });
+  
+  // Test variations, edge cases, etc.
+});
+```
+
+### Example: Testing a Modern Pattern Handler
+
+When testing a pattern handler built with the modern factory approach:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { weekendPatternHandler } from '../../../src/compromise/patterns/weekend';
+import { createDoc } from '../../../src/compromise/utils/testHelpers';
+import { RRule } from 'rrule';
+
+describe('Weekend Pattern Handler', () => {
+  // Test the matcher function
+  it('should match weekend patterns', () => {
+    const doc = createDoc('every weekend');
+    const handler = weekendPatternHandler;
+    
+    // Get matches from the handler's matcher functions
+    const matches = handler.matchers.map(matcher => matcher(doc))
+      .filter(match => match !== null);
+    
+    expect(matches.length).toBe(1);
+    expect(matches[0]?.type).toBe('weekend');
+  });
+  
+  // Test the processor function
+  it('should process weekend patterns correctly', () => {
+    const options = {};
+    const match = {
+      type: 'weekend',
+      value: 'weekend',
+      text: 'every weekend'
+    };
+    
+    // Process the match
+    weekendPatternHandler.processor(options, match);
+    
+    expect(options.freq).toBe(RRule.WEEKLY);
+    expect(options.byweekday).toEqual([RRule.SA, RRule.SU]);
+  });
+  
+  // Test the complete handler
+  it('should handle complete weekend pattern', () => {
+    const result = processRecurrencePattern('every weekend');
+    
+    expect(result).not.toBeNull();
+    expect(result?.options.freq).toBe(RRule.WEEKLY);
+    expect(result?.options.byweekday).toEqual([RRule.SA, RRule.SU]);
+  });
+});
+```
+
+## What to Test
+
+### For Pattern Handlers
+
+Test the following aspects of each pattern handler:
+
+1. **Basic Recognition**: Verify the handler recognizes its intended patterns.
+2. **Parameter Extraction**: Confirm that parameters (e.g., intervals, frequencies) are correctly extracted.
+3. **Variations**: Test different variations and phrasings of the same pattern.
+4. **Edge Cases**: Test unusual inputs that should still work.
+5. **Negative Cases**: Verify that non-matching patterns are not incorrectly handled.
+6. **Combined Patterns**: Test how the handler works with other patterns.
+7. **Confidence Scores**: Verify the confidence scoring is appropriate.
+
+### For Core Functions
+
+Test the following aspects of core functions:
+
+1. **Basic Functionality**: Test the primary use case.
+2. **Parameter Validation**: Test how the function handles different parameter values.
+3. **Error Handling**: Test how the function responds to invalid inputs.
+4. **Edge Cases**: Test boundary conditions and special cases.
+5. **Performance**: Test with large or complex inputs where relevant.
+
+### Testing Text Normalization
+
+For text normalization tests:
+
+1. **Basic Normalization**: Test standard cases like lowercase, whitespace, etc.
+2. **Misspelling Correction**: Test common and edge-case misspellings.
+3. **Synonym Replacement**: Test that synonyms are correctly replaced.
+4. **Format Standardization**: Test handling of punctuation and ordinals.
+
+## Mocking
+
+When you need to isolate code from its dependencies, use Vitest's mocking capabilities:
+
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+import { functionWithDependency } from '../src/module';
+import * as dependency from '../src/dependency';
+
+describe('functionWithDependency', () => {
+  it('should use the dependency correctly', () => {
+    // Mock the dependency
+    vi.spyOn(dependency, 'dependencyFunction').mockReturnValue('mocked result');
+    
+    // Test the function
+    const result = functionWithDependency('input');
+    
+    // Verify the dependency was called correctly
+    expect(dependency.dependencyFunction).toHaveBeenCalledWith('input');
+    
+    // Verify the result
+    expect(result).toBe('expected result with mocked dependency');
+    
+    // Restore the original implementation
+    vi.restoreAllMocks();
+  });
+});
+```
+
+## Test Fixtures
+
+Store test fixtures in the `test/fixtures` directory:
+
+```typescript
+// test/fixtures/patterns.ts
+export const frequencyPatterns = {
+  daily: {
+    input: 'daily',
+    expectedFreq: 0, // RRule.DAILY
+    expectedInterval: 1
+  },
+  weekly: {
+    input: 'weekly',
+    expectedFreq: 1, // RRule.WEEKLY
+    expectedInterval: 1
+  }
+  // Add more fixtures as needed
+};
+```
+
+Use fixtures in your tests:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { processRecurrencePattern } from '../src';
+import { frequencyPatterns } from './fixtures/patterns';
+
+describe('Frequency patterns', () => {
+  Object.entries(frequencyPatterns).forEach(([name, fixture]) => {
+    it(`should process ${name} pattern correctly`, () => {
+      const result = processRecurrencePattern(fixture.input);
+      
+      expect(result).not.toBeNull();
+      expect(result?.options.freq).toBe(fixture.expectedFreq);
+      expect(result?.options.interval).toBe(fixture.expectedInterval);
     });
   });
 });
 ```
 
-### 2. Test Assertions
+## Debugging Tests
 
-- Write specific assertions that clearly validate expectations
-- Include messages with assertions for clarity
-- Test both positive and negative cases
-- Verify error conditions and edge cases
-
-### 3. Test Isolation
-
-- Each test should be independent
-- Avoid shared mutable state between tests
-- Reset any global state before/after tests
-- Mock external dependencies
-
-### 4. Testing Patterns Implementation
-
-When testing pattern handlers, consider:
-
-1. **Basic Recognition**: Test that the pattern is recognized correctly
-2. **Parameter Extraction**: Test that parameters (frequency, interval, etc.) are extracted correctly
-3. **Variations**: Test different ways to express the same pattern
-4. **Edge Cases**: Test boundary conditions and unusual inputs
-5. **Combined Patterns**: Test how the pattern works with other patterns
-
-Example:
+The `test/debug` directory contains tests designed for manual verification of complex scenarios:
 
 ```typescript
-it('should extract the correct interval from "every 3 weeks"', () => {
-  const result = processRecurrencePattern('every 3 weeks');
-  
-  expect(result).not.toBeNull();
-  if (result) {
-    expect(result.freq).toBe(RRule.WEEKLY);
-    expect(result.interval).toBe(3);
-  }
+// test/debug/complex-patterns.test.ts
+import { describe, it } from 'vitest';
+import { processRecurrencePattern } from '../src';
+import { RRule } from 'rrule';
+
+describe.skip('Complex pattern debugging', () => {
+  it('should process complex pattern', () => {
+    const input = 'every other Tuesday and Friday until the end of the year';
+    const result = processRecurrencePattern(input);
+    
+    console.log('Input:', input);
+    console.log('Result:', JSON.stringify(result, null, 2));
+    
+    if (result) {
+      const rule = new RRule(result.options);
+      console.log('RRule text:', rule.toText());
+      console.log('Next 5 occurrences:', rule.all((date, i) => i < 5));
+    }
+    
+    // No assertions, just for manual verification
+  });
 });
 ```
 
-### 5. Debug Tests
+Run debug tests explicitly when needed:
 
-Debug tests are specialized tests that help diagnose issues:
-
-- Include detailed console logging
-- Test specific scenarios that are difficult to test in regular unit tests
-- Provide more context in assertions
-- Focus on edge cases and complex interactions
-
-## Adding New Tests
-
-When implementing a new feature or fixing a bug:
-
-1. **Start with a Test**: Write a failing test that reproduces the issue or demonstrates the expected behavior
-2. **Implement the Solution**: Write the minimum code needed to make the test pass
-3. **Refactor**: Clean up the code while keeping the tests passing
-4. **Add Edge Cases**: Write additional tests for edge cases and error conditions
-5. **Benchmark If Needed**: If performance is a concern, add a benchmark test
-
-### Example Workflow:
-
-```typescript
-// 1. Write a failing test
-it('should recognize "first Monday of each month"', () => {
-  const result = processRecurrencePattern('first Monday of each month');
-  
-  expect(result).not.toBeNull();
-  if (result) {
-    expect(result.freq).toBe(RRule.MONTHLY);
-    expect(result.byweekday).toContainEqual(RRule.MO);
-    expect(result.bysetpos).toContain(1);
-  }
-});
-
-// 2. Implement the solution in src/compromise/patterns/dayOfMonth.ts
-// 3. Refactor and ensure tests pass
-// 4. Add edge cases
-it('should recognize "last Friday of every month"', () => {
-  const result = processRecurrencePattern('last Friday of every month');
-  
-  expect(result).not.toBeNull();
-  if (result) {
-    expect(result.freq).toBe(RRule.MONTHLY);
-    expect(result.byweekday).toContainEqual(RRule.FR);
-    expect(result.bysetpos).toContain(-1); // -1 represents last occurrence
-  }
-});
+```bash
+npm test -- debug/complex-patterns
 ```
 
-## Troubleshooting Tests
+## Code Coverage
 
-### Common Issues:
+Aim for high test coverage, especially for core functionality and pattern handlers. Run coverage reports to identify untested code:
 
-1. **Tests Not Found**: Ensure test filenames follow the naming convention (`*.test.ts`)
-2. **Async Test Failures**: Use `async/await` for asynchronous tests
-3. **Pattern Not Matching**: Check for typos in test filter patterns
-4. **Intermittent Failures**: Look for shared state or timing issues
+```bash
+npm test -- --coverage
+```
 
-### Debugging Tips:
-
-1. **Console Logging**: Add `console.log` statements to debug values
-2. **Isolate the Test**: Run a single test with `--run`
-3. **Debug Test Files**: Create special debug test files with detailed logging
-4. **Inspect Snapshots**: Use snapshot testing for complex objects
+The coverage report will identify:
+- Lines of code that haven't been executed during tests
+- Branches (if/else statements) that haven't been tested
+- Functions that haven't been called during tests
 
 ## Continuous Integration
 
-Tests run automatically in CI/CD pipelines:
-
-1. **Pull Requests**: All tests run when PRs are created or updated
-2. **Main Branch**: Tests run on every commit to the main branch
-3. **Failed Tests**: PRs with failing tests cannot be merged
-
-## Testing Misspelling Correction
-
-HeliosJS includes specialized tests for misspelling correction that verify the system's ability to handle common typos and spelling variations in natural language inputs.
-
-### Misspelling Test Script
-
-Located at `test/debug/misspelling-correction.ts`, this script tests the system's ability to correct misspellings in recurring patterns:
+All tests run automatically on pull requests and commits to the main branch. Ensure your tests pass locally before pushing changes:
 
 ```bash
-npm run test:misspellings
+npm test
 ```
 
-### What's Tested
+## Best Practices
 
-The misspelling correction tests verify:
+1. **Test Naming**: Use descriptive names that explain what the test is verifying.
+2. **Small Tests**: Keep tests focused on a single piece of functionality.
+3. **Independence**: Tests should not depend on other tests or their order of execution.
+4. **Real-World Inputs**: Include tests with real-world examples.
+5. **Avoid Test Duplication**: Use fixtures and test helpers when testing similar functionality.
+6. **Consistent Structure**: Follow consistent patterns for test organization and naming.
+7. **Test Edge Cases**: Include tests for boundary conditions and error handling.
+8. **Clear Expectations**: Make it clear what each test is verifying with descriptive assertions.
 
-1. **Day Name Misspellings**: Common misspellings of weekdays (e.g., "mondey", "tuseday", "wednessday")
-2. **Month Name Misspellings**: Variations of month names (e.g., "janurary", "feburary")
-3. **Frequency Term Misspellings**: Misspelled frequency terms (e.g., "dayly", "wekly", "monthy")
-4. **Special Term Misspellings**: Common variants of special terms (e.g., "evrey", "eech", "untill")
-5. **Combined Pattern Misspellings**: Patterns with multiple misspellings (e.g., "evrey weekdys")
-
-### Test Structure
-
-The misspelling correction test:
-
-1. Defines a set of test patterns with common misspellings
-2. Processes each pattern using the HeliosJS processor with misspelling correction enabled
-3. Verifies that the pattern is correctly interpreted despite misspellings
-4. Shows the next occurrences generated from the corrected pattern
-
-### Adding New Misspelling Tests
-
-When expanding the misspelling dictionaries:
-
-1. Add new test patterns to `test/debug/misspelling-correction.ts`
-2. Add the corresponding misspellings to the appropriate dictionaries in `src/constants.ts`
-3. Run the tests to verify corrections work as expected
-
-Example test pattern addition:
-
-```typescript
-const patterns = [
-  // Existing test patterns
-  "every mondey",
-  "every tuseday",
-  
-  // New test pattern
-  "every secound tusday of the monthy",
-];
-```
-
-### Interpreting Test Results
-
-The test output shows:
-- Whether the pattern was successfully processed
-- The confidence level of the interpretation
-- The extracted parameters (frequency, interval, weekdays)
-- The next occurrences based on the corrected pattern
-
-Successful tests should show high confidence levels (0.90+) and correctly generate next occurrences.
-
-## Conclusion
-
-Testing is a critical part of the HeliosJS development process. Following these guidelines ensures that the library remains reliable, maintainable, and well-documented.
-
-When contributing new code, remember that thorough testing helps:
-
-- Verify behavior works as expected
-- Prevent regressions
-- Document expected behavior
-- Facilitate future refactoring
-- Ensure backward compatibility 
+By following these guidelines, you'll ensure that HeliosJS remains reliable and maintainable as it evolves. 

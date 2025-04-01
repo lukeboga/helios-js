@@ -1,349 +1,329 @@
-# Contributing to Helios-JS
+# Contributing to HeliosJS
 
-Thank you for your interest in contributing to Helios-JS! This guide will help you get started with the development environment, understand our coding standards, and learn the contribution workflow.
+> **Change Log**:  
+> - [April 2025]: Merged duplicate guides into a single document
+> - [April 2025]: Added pattern handler development guidelines
+> - [April 2025]: Updated file structure to reflect current repository organization
+> - [April 2025]: Added section on modern pattern handler architecture
 
-## Table of Contents
+This guide provides essential information for contributors to the HeliosJS project.
 
-1. [Getting Started](#getting-started)
-2. [Development Environment](#development-environment)
-3. [Project Structure](#project-structure)
-4. [Coding Standards](#coding-standards)
-5. [Testing](#testing)
-6. [Documentation](#documentation)
-7. [Contribution Workflow](#contribution-workflow)
-8. [Pull Request Guidelines](#pull-request-guidelines)
-9. [Community and Communication](#community-and-communication)
-
-## Getting Started
+## Development Setup
 
 ### Prerequisites
 
-To contribute to Helios-JS, you'll need:
-
-- Node.js (v14 or higher)
-- npm (v6 or higher) or yarn
+- Node.js (v18 or later)
+- npm (v9 or later)
 - Git
-- A GitHub account
-- Your favorite IDE (we recommend VS Code with TypeScript support)
 
-### Fork and Clone
+### Getting Started
 
-1. Fork the Helios-JS repository on GitHub
-2. Clone your fork to your local machine:
-
-```bash
-git clone https://github.com/YOUR-USERNAME/helios-js.git
-cd helios-js
-```
-
-3. Add the original repository as an upstream remote:
-
-```bash
-git remote add upstream https://github.com/original-owner/helios-js.git
-```
-
-## Development Environment
-
-### Installation
-
-Install dependencies:
-
-```bash
-# Using npm
-npm install
-
-# Using yarn
-yarn
-```
-
-### Build
-
-Build the project:
-
-```bash
-# Using npm
-npm run build
-
-# Using yarn
-yarn build
-```
-
-### Development Mode
-
-Start the development mode with auto-rebuild:
-
-```bash
-# Using npm
-npm run dev
-
-# Using yarn
-yarn dev
-```
+1. Fork the repository
+2. Clone your fork:
+   ```bash
+   git clone https://github.com/your-username/helios-js.git
+   cd helios-js
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Run tests to ensure everything is working:
+   ```bash
+   npm test
+   ```
 
 ## Project Structure
 
-Helios-JS follows a modular architecture, with components organized in specific directories:
-
 ```
 helios-js/
-├── src/                  # Source code
-│   ├── patterns/         # Pattern handlers
-│   ├── utils/            # Utility functions
-│   ├── constants.ts      # Constants and enums
-│   ├── errors.ts         # Error definitions
-│   ├── index.ts          # Main entry point
-│   ├── normalizer.ts     # Text normalization
-│   ├── transformer.ts    # Transformation pipeline
-│   └── types.ts          # Type definitions
-├── docs/                 # Documentation
-│   ├── public/           # User documentation
-│   └── development/      # Developer documentation
-├── test/                 # Test files
-├── _planning/            # Planning and research documents
-├── package.json          # Package configuration
-└── tsconfig.json         # TypeScript configuration
+├── src/                 # Source code
+│   ├── compromise/      # CompromiseJS integration
+│   │   ├── patterns/    # Pattern handlers
+│   │   ├── utils/       # Utility functions
+│   │   └── index.ts     # Main entry point
+│   ├── constants.ts     # Constants and configuration
+│   ├── patterns/        # Legacy pattern handlers
+│   ├── types.ts         # TypeScript type definitions
+│   └── index.ts         # Library entry point
+├── docs/                # Documentation
+│   └── development/     # Developer documentation
+├── test/                # Test files
+│   ├── unit/            # Unit tests
+│   ├── integration/     # Integration tests
+│   └── fixtures/        # Test fixtures
+├── package.json         # npm package definition
+└── tsconfig.json        # TypeScript configuration
 ```
 
-### Key Components
+## Development Workflow
 
-- **src/patterns/**: Contains pattern handlers for different recurrence pattern types
-- **src/normalizer.ts**: Handles text normalization before pattern matching
-- **src/transformer.ts**: Orchestrates the transformation pipeline
-- **src/index.ts**: Provides the public API
+### Making Changes
+
+1. Create a new branch for your feature or fix:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make your changes, following the coding standards
+
+3. Write tests for your changes:
+   ```bash
+   # Run tests
+   npm test
+   
+   # Run tests in watch mode (during development)
+   npm test -- --watch
+   ```
+
+4. Update documentation as needed
+
+5. Commit your changes:
+   ```bash
+   git commit -m "feat: add your feature description"
+   ```
+
+### Pull Requests
+
+1. Push your branch to your fork:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+2. Create a pull request through the GitHub interface
+
+3. Ensure the CI tests pass
+
+4. Address any review comments
 
 ## Coding Standards
 
-Helios-JS follows these coding standards:
+### Code Style
 
-### TypeScript
+HeliosJS follows standardized code style rules enforced by ESLint and Prettier. The configuration files are in the repository root.
 
-- Use strict TypeScript with explicit types
-- Prefer interfaces over type aliases for object types
-- Use type guards to narrow types when necessary
-- Avoid using `any` unless absolutely necessary
+- Use 2 spaces for indentation
+- Use single quotes for strings
+- Always use semicolons
+- Prefer arrow functions
+- Use explicit type annotations for function parameters and return types
 
-### Naming Conventions
+### TypeScript Guidelines
 
-- Use camelCase for variables, functions, and properties
-- Use PascalCase for classes, interfaces, and type aliases
-- Use UPPER_SNAKE_CASE for constants
-- Prefix interfaces with `I` only when they represent object instances (e.g., `IHandler`)
-- Use descriptive names that explain what the variable/function does
-
-### File Organization
-
-- Each pattern handler should be in its own file
-- Group related functionality in directories
-- Keep files focused on a single responsibility
-- Use index files to aggregate and re-export functionality
-
-### Comments and Documentation
-
-- Use JSDoc comments for all public APIs
-- Include examples in JSDoc for complex functions
-- Comment non-obvious code sections or algorithms
-- Maintain high-level documentation in markdown files
+- Always define proper interfaces for function parameters and return types
+- Use descriptive variable and function names
+- Avoid using `any` type; prefer specific types or generics
+- Use readonly properties where appropriate
 
 Example:
 
 ```typescript
-/**
- * Normalizes a natural language recurrence pattern for more consistent pattern matching.
- * 
- * This function applies several transformations to make the input more consistent:
- * 1. Converts text to lowercase for case-insensitive matching
- * 2. Normalizes whitespace (converts multiple spaces to single spaces)
- * 3. Removes ordinal suffixes from numbers (e.g., "1st" becomes "1")
- * 
- * @param input - The raw natural language recurrence pattern
- * @param options - Optional configuration options
- * @returns Normalized text ready for pattern matching
- * 
- * @example
- * normalizeInput("Every 2nd Week on Monday")
- * // returns "every 2 week on monday"
- */
-export function normalizeInput(input: string, options?: NormalizerOptions): string {
-  // Implementation...
+// Good
+interface PatternResult {
+  readonly type: string;
+  readonly value: string;
+  readonly confidence: number;
+}
+
+function processPattern(input: string, options?: ProcessOptions): PatternResult | null {
+  // Implementation
+}
+
+// Avoid
+function processPattern(input, options?) {
+  // Implementation
 }
 ```
 
-### Code Style
+## Pattern Handler Development
 
-- Use 2 spaces for indentation
-- Add a semicolon at the end of each statement
-- Use single quotes for strings
-- Place opening braces on the same line
-- Add spaces around operators
-- Use arrow functions for callbacks
+Pattern handlers are the core of HeliosJS's natural language processing capabilities. They recognize specific patterns in text and convert them into structured recurrence rules.
+
+### Pattern Handler Structure
+
+A pattern handler should:
+
+1. Identify a specific pattern in natural language text
+2. Extract relevant parameters from the pattern
+3. Update the recurrence options based on the pattern
+
+### Modern Pattern Handler Architecture
+
+HeliosJS is transitioning to a factory-based pattern handler architecture:
+
+```typescript
+// src/compromise/patterns/dayOfWeek.ts
+import { Doc } from 'compromise';
+import { RRule } from 'rrule';
+import { PatternMatch, RecurrenceOptions } from '../../types';
+import { createPatternHandler } from '../utils/handlerFactory';
+import { DAY_NAMES, DAY_NAME_MAP } from '../../constants';
+
+// 1. Define one or more matcher functions
+const dayOfWeekMatcher = (doc: Doc): PatternMatch | null => {
+  // Match "every monday" or similar patterns
+  const matches = doc.match('(every|on) [<day>#WeekDay]');
+  
+  if (matches.found) {
+    const day = matches.groups('day').text().toLowerCase();
+    return {
+      type: 'dayOfWeek',
+      value: day,
+      text: matches.text()
+    };
+  }
+  
+  return null;
+};
+
+const pluralDayMatcher = (doc: Doc): PatternMatch | null => {
+  // Match "mondays" or similar patterns
+  const dayPattern = DAY_NAMES.map(day => `${day}s`).join('|');
+  const matches = doc.match(`(${dayPattern})`);
+  
+  if (matches.found) {
+    // Extract day name without the plural 's'
+    const dayWithS = matches.text().toLowerCase();
+    const day = dayWithS.substring(0, dayWithS.length - 1);
+    
+    return {
+      type: 'dayOfWeek',
+      value: day,
+      text: matches.text()
+    };
+  }
+  
+  return null;
+};
+
+// 2. Define a processor function
+const dayOfWeekProcessor = (options: RecurrenceOptions, match: PatternMatch): void => {
+  if (match.type === 'dayOfWeek') {
+    const day = match.value;
+    
+    // Set weekly frequency
+    options.freq = RRule.WEEKLY;
+    
+    // Set the day of week
+    if (DAY_NAME_MAP[day]) {
+      options.byweekday = [DAY_NAME_MAP[day]];
+    }
+  }
+};
+
+// 3. Create and export the pattern handler
+export const dayOfWeekPatternHandler = createPatternHandler(
+  'dayOfWeek',                       // Handler name
+  [dayOfWeekMatcher, pluralDayMatcher], // Array of matchers
+  dayOfWeekProcessor,                // Processor function
+  {
+    category: 'dayOfWeek',
+    priority: 3
+  }
+);
+```
+
+The factory approach provides several benefits:
+
+1. **Separation of Concerns**: Matchers and processors have distinct responsibilities
+2. **Reusability**: Matcher functions can be shared across handlers
+3. **Testability**: Each component can be tested independently
+4. **Type Safety**: Strong typing throughout the pipeline
+5. **Consistency**: Standard structure for all pattern handlers
+
+### Key Interfaces
+
+#### PatternMatch
+
+```typescript
+interface PatternMatch {
+  type: string;       // Type of pattern matched
+  value: string;      // Extracted value
+  text: string;       // Original matched text
+  [key: string]: any; // Additional properties
+}
+```
+
+#### PatternHandler
+
+```typescript
+interface PatternHandler {
+  name: string;                                  // Handler name
+  matchers: Array<(doc: Doc) => PatternMatch | null>; // Pattern matchers
+  processor: (options: RecurrenceOptions, match: PatternMatch) => void; // Processor
+  category: string;                              // Handler category
+  priority: number;                              // Processing priority
+}
+```
+
+### Best Practices for Pattern Handlers
+
+1. **Focus on a Single Pattern Type**: Each handler should recognize one type of pattern
+2. **Prioritize Precision**: Aim for high-confidence matches
+3. **Use CompromiseJS Features**: Leverage NLP capabilities for pattern recognition
+4. **Add Comprehensive Tests**: Test variations and edge cases
+5. **Document Supported Patterns**: Update the pattern documentation
+6. **Keep Side Effects Contained**: Limit modifications to the options object
+7. **Centralize Pattern Definitions**: Use constants for pattern strings
+
+### Example: Adding a New Pattern Handler
+
+To add a new pattern handler:
+
+1. **Decide on Pattern Type**: Choose a specific pattern to handle
+2. **Create a New File**: Add a new file in `src/compromise/patterns/`
+3. **Implement Matchers and Processor**: Follow the factory pattern
+4. **Register the Handler**: Update the handler registry
+5. **Add Tests**: Create test cases in the appropriate test directory
+6. **Update Documentation**: Document the new pattern support
 
 ## Testing
 
-HeliosJS uses Vitest for testing. For comprehensive information about our testing approach, structure, and best practices, see the [Testing Guide](./testing-guide.md).
+Refer to the [Testing Guide](./testing-guide.md) for detailed information on:
 
-Key points:
-
-- Tests are organized in the `test/` directory by type (unit, integration, debug)
-- Unit tests focus on testing individual components in isolation
-- Integration tests verify public API behavior
-- Debug tests help diagnose specific issues
-- Follow the testing conventions and practices documented in the Testing Guide
-
-Running tests:
-
-```bash
-# Run all tests
-npm run test:unit
-
-# Run specific tests
-npm run test:unit -- --run "Frequency Pattern"
-
-# Run tests in watch mode
-npm run test:unit -- --watch
-```
+- Test organization and structure
+- How to write effective tests
+- Testing pattern handlers
+- Debugging tests
+- Performance testing
 
 ## Documentation
 
-Documentation is a crucial part of Helios-JS. We maintain two sets of documentation:
+When making changes, update the relevant documentation:
 
-1. **User Documentation**: Located in `docs/public/`, aimed at users of the library
-2. **Developer Documentation**: Located in `docs/development/`, aimed at contributors
+- **Code Documentation**: Add JSDoc comments to functions and classes
+- **API Reference**: Update the API documentation
+- **Usage Examples**: Provide examples for new features
+- **README**: Update installation and usage instructions if needed
 
-### Updating Documentation
+### Documentation Style
 
-When making changes to the codebase:
+- Use clear, concise language
+- Provide examples for complex features
+- Follow Markdown formatting conventions
+- Include links to related documentation
 
-1. Update relevant user documentation if you change or add features
-2. Update developer documentation if you change architecture or internal APIs
-3. Ensure examples are up-to-date and working
+## Release Process
 
-### Documentation Format
+The release process is managed by the core team:
 
-All documentation is written in Markdown with the following guidelines:
+1. **Version Bump**: Update version in package.json
+2. **Changelog**: Document changes since last release
+3. **Release Tags**: Create a release tag
+4. **npm Publish**: Publish to the npm registry
 
-- Use descriptive headings and subheadings
-- Include code examples for clarity
-- Use tables for structured information
-- Add diagrams where appropriate
-- Keep language clear and accessible
+## Getting Help
 
-## Contribution Workflow
+If you need assistance with contributing:
 
-### 1. Choose an Issue
+- **Issues**: Check existing GitHub issues or create a new one
+- **Discussions**: Use GitHub Discussions for questions
+- **Comments**: Add comments to PRs for specific questions
 
-- Look for issues labeled "good first issue" if you're new to the project
-- Comment on the issue to let others know you're working on it
-- If you want to work on something that doesn't have an issue yet, create one first
+## Code of Conduct
 
-### 2. Create a Branch
+All contributors are expected to adhere to the project's Code of Conduct, which promotes a respectful and inclusive environment.
 
-Create a new branch for your work:
+## License
 
-```bash
-git checkout -b feature/your-feature-name
-```
-
-Use branch naming conventions:
-- `feature/` for new features
-- `fix/` for bug fixes
-- `docs/` for documentation updates
-- `refactor/` for code refactoring
-- `test/` for adding or updating tests
-
-### 3. Make Changes
-
-Make your changes following the coding standards.
-
-### 4. Write or Update Tests
-
-Add tests for any new functionality or fix bugs to ensure they don't recur.
-
-### 5. Run Tests and Lint
-
-Ensure all tests pass and the code meets the style guidelines:
-
-```bash
-npm test
-npm run lint
-```
-
-### 6. Commit Your Changes
-
-Follow the [Conventional Commits](https://www.conventionalcommits.org/) format:
-
-```
-type(scope): short description
-
-longer description if needed
-```
-
-Types include:
-- `feat`: A new feature
-- `fix`: A bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, semicolons, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Changes to the build process, tools, etc.
-
-Example:
-```
-feat(patterns): add support for time of day patterns
-
-- Added a new pattern handler for time expressions
-- Updated transformer to handle time patterns
-- Added tests for time pattern recognition
-```
-
-### 7. Push to Your Fork
-
-```bash
-git push origin feature/your-feature-name
-```
-
-### 8. Create a Pull Request
-
-Create a pull request to the main repository with:
-- A clear title following the commit message format
-- A description explaining what the changes do
-- Reference to any related issues
-
-## Pull Request Guidelines
-
-When creating a pull request:
-
-1. **Keep It Focused**: Address a single concern or feature
-2. **Provide Context**: Explain what the PR does and why
-3. **Include Tests**: Ensure your changes are tested
-4. **Update Documentation**: Add or update relevant documentation
-5. **Follow Up**: Respond to feedback and make requested changes
-6. **Be Patient**: The review process takes time
-
-### Review Process
-
-Pull requests will be reviewed by maintainers, who may:
-- Ask questions about your approach
-- Suggest improvements
-- Request changes
-- Approve and merge your PR
-
-## Community and Communication
-
-### Getting Help
-
-If you need help while contributing:
-- Ask questions in the issue you're working on
-- Reach out in the project's discussion forums or chat channels
-- Read the existing documentation and code
-
-### Code of Conduct
-
-Remember to adhere to the project's code of conduct at all times. Be respectful, considerate, and constructive in all interactions.
-
-### Recognition
-
-All contributors will be recognized in the project's contributors list. We value every contribution, from code to documentation to bug reports.
-
-## Thank You!
-
-Your contributions are what make Helios-JS better. Thank you for taking the time to contribute and for following these guidelines! 
+By contributing to HeliosJS, you agree that your contributions will be licensed under the project's MIT license. 

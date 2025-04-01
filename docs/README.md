@@ -26,6 +26,9 @@ Documentation for developers who want to understand, extend, or contribute to He
 - [**API Reference**](./development/api-reference.md) - Detailed reference for all exported functions and types
 - [**Normalization Pipeline**](./development/normalization-pipeline.md) - How text preprocessing works
 - [**Pattern Handler Guide**](./development/pattern-handler-guide.md) - Creating and extending pattern handlers
+- [**NL Patterns**](./development/nl-patterns.md) - Natural language pattern documentation
+- [**CompromiseJS Integration**](./development/compromise-integration.md) - How CompromiseJS is integrated for NLP
+- [**Testing Guide**](./development/testing-guide.md) - Guide for testing pattern handlers and other components
 - [**Contributing Guide**](./development/contributing-guide.md) - How to contribute to the project
 
 ## Additional Resources

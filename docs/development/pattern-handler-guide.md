@@ -1,232 +1,142 @@
 # Pattern Handler Guide
 
+> **Change Log**:  
+> - [April 2025]: Updated pattern handler interface to match implementation
+> - [April 2025]: Updated pattern result structure to match actual PatternHandlerResult
+> - [April 2025]: Corrected code examples to use function-based approach
+> - [April 2025]: Updated extension guidance for adding new pattern handlers
+
 This guide explains how pattern handlers work in Helios-JS and provides detailed instructions for creating custom pattern handlers. Whether you're extending the library with new pattern types or troubleshooting existing pattern recognition, this guide will help you understand the pattern handling system.
 
 ## What is a Pattern Handler?
 
-A pattern handler is a specialized component responsible for recognizing a specific type of natural language pattern and transforming it into structured RRule options. Each handler focuses on a particular pattern category, such as frequency patterns ("daily", "weekly"), interval patterns ("every 2 weeks"), or day patterns ("every Monday").
+A pattern handler is a specialized function responsible for recognizing a specific type of natural language pattern and transforming it into structured RRule options. Each handler focuses on a particular pattern category, such as frequency patterns ("daily", "weekly"), interval patterns ("every 2 weeks"), or day patterns ("every Monday").
 
 Pattern handlers are the core of Helios-JS's pattern recognition system. They work together to transform a wide variety of natural language inputs into structured recurrence rules.
 
 ## Pattern Handler Interface
 
-All pattern handlers implement the `PatternHandler` interface:
+All pattern handlers follow this function signature:
 
 ```typescript
-interface PatternHandler {
-  /**
-   * Applies pattern recognition to input text and returns a result if the pattern matches.
-   * 
-   * @param input - Normalized recurrence pattern string
-   * @returns PatternResult if a pattern was matched, null otherwise
-   */
-  apply(input: string): PatternResult | null;
-
-  /**
-   * The priority of this pattern handler in the transformation pipeline.
-   * Higher priority handlers are executed first.
-   */
-  priority: number;
-
-  /**
-   * Descriptive name of the pattern handler for debugging and logging.
-   */
-  name: string;
-
-  /**
-   * The category this pattern handler belongs to.
-   * Used for enabling/disabling groups of related patterns.
-   */
-  category: string;
-}
+/**
+ * Applies pattern recognition using CompromiseJS
+ * 
+ * @param doc - CompromiseJS document
+ * @param options - Current recurrence options
+ * @param config - Optional configuration
+ * @returns Pattern handler result
+ */
+function patternHandler(
+  doc: CompromiseDocument,
+  options: RecurrenceOptions,
+  config?: any
+): PatternHandlerResult
 ```
 
-## Pattern Result Structure
+## Pattern Handler Result Structure
 
-When a pattern handler recognizes a pattern, it returns a `PatternResult` object:
+When a pattern handler processes text, it returns a `PatternHandlerResult` object:
 
 ```typescript
-interface PatternResult {
-  /**
-   * The recurrence options extracted from the pattern.
-   */
-  options: RecurrenceOptions;
-  
-  /**
-   * Metadata about the pattern match.
-   */
-  metadata: PatternMatchMetadata;
-}
-
-interface PatternMatchMetadata {
-  /**
-   * The pattern handler name that produced this result.
-   */
-  patternName: string;
-  
-  /**
-   * The pattern category (frequency, interval, dayOfWeek, etc.)
-   */
-  category: string;
-  
-  /**
-   * The specific text that was matched.
-   */
-  matchedText: string;
-  
-  /**
-   * The confidence level of this match (0.0 to 1.0).
-   * Higher values indicate more certain matches.
-   */
-  confidence: number;
-  
-  /**
-   * Whether this is a partial match that might be combined with others.
-   */
-  isPartial: boolean;
-  
-  /**
-   * The specific properties that were set by this pattern.
-   */
-  setProperties: Set<keyof RecurrenceOptions>;
-  
-  /**
-   * Optional warnings about this pattern match.
-   */
+interface PatternHandlerResult {
+  /** Whether the pattern was matched */
+  matched: boolean;
+  /** Confidence level of the match (0.0-1.0) */
+  confidence?: number;
+  /** Any warnings during processing */
   warnings?: string[];
 }
 ```
 
-The `options` field contains the RRule options extracted from the pattern, while the `metadata` field provides information about the match for debugging and pattern combination.
+Instead of returning a new object with options, pattern handlers directly modify the `options` object passed to them. The result simply indicates whether a match was found, the confidence level, and any warnings.
 
 ## Built-in Pattern Handlers
 
 Helios-JS includes several built-in pattern handlers, each responsible for a specific pattern category:
 
-1. **intervalPatternHandler**: Recognizes patterns with explicit intervals (e.g., "every 2 weeks")
-2. **frequencyPatternHandler**: Recognizes basic frequency terms (e.g., "daily", "weekly")
-3. **dayOfWeekPatternHandler**: Recognizes day-based patterns (e.g., "every Monday", "every weekday")
-4. **dayOfMonthPatternHandler**: Recognizes month day patterns (e.g., "1st of the month")
-5. **untilDatePatternHandler**: Recognizes end date specifications (e.g., "until December 31st")
+1. **applyIntervalPatterns**: Recognizes patterns with explicit intervals (e.g., "every 2 weeks")
+2. **applyFrequencyPatterns**: Recognizes basic frequency terms (e.g., "daily", "weekly")
+3. **applyDayOfWeekPatterns**: Recognizes day-based patterns (e.g., "every Monday", "every weekday")
+4. **applyDayOfMonthPatterns**: Recognizes month day patterns (e.g., "1st of the month")
+5. **applyUntilDatePatterns**: Recognizes end date specifications (e.g., "until December 31st")
 
-These handlers are applied in priority order, with higher priority handlers processing first.
+These handlers are applied in a specific order as defined in the processor.
 
 ## How Pattern Handlers Work
 
-### The `apply` Method
+### The Pattern Handler Function
 
-The core of each pattern handler is the `apply` method, which follows this general structure:
+The core of each pattern handler follows this general structure:
 
 ```typescript
-apply(input: string): PatternResult | null {
-  // 1. Check if the input matches this pattern type
+function applyPatternType(
+  doc: CompromiseDocument,
+  options: RecurrenceOptions,
+  config?: any
+): PatternHandlerResult {
+  // Initialize result
+  const result: PatternHandlerResult = {
+    matched: false,
+    confidence: 1.0,
+    warnings: []
+  };
+
+  // 1. Check if the input matches this pattern type using CompromiseJS
   // 2. Extract relevant components from the match
-  // 3. Transform extracted components into RRule options
-  // 4. Return a PatternResult object with options and metadata
-  // 5. Return null if the pattern doesn't match
+  // 3. Modify the options object with the extracted data
+  // 4. Set result.matched = true if a pattern was recognized
+  // 5. Set confidence and warnings as needed
+
+  return result;
 }
 ```
 
-Let's examine a simplified version of the frequency pattern handler to understand how this works:
+Let's examine a simplified version of the frequency pattern handler:
 
 ```typescript
-apply(input: string): PatternResult | null {
-  // Look for basic frequency terms
-  if (input === 'daily') {
-    // Create recurrence options
-    const options: RecurrenceOptions = {
-      freq: RRule.DAILY,
-      interval: 1,
-      byweekday: null,
-      bymonthday: null,
-      bymonth: null
-    };
-    
-    // Set the properties that were explicitly defined
-    const setProperties = new Set<keyof RecurrenceOptions>(['freq', 'interval']);
-    
-    // Return the pattern result
-    return {
-      options,
-      metadata: {
-        patternName: this.name,
-        category: this.category,
-        matchedText: input,
-        confidence: 1.0, // High confidence for exact match
-        isPartial: false,
-        setProperties
-      }
-    };
+function applyFrequencyPatterns(
+  doc: CompromiseDocument,
+  options: RecurrenceOptions,
+  config?: any
+): PatternHandlerResult {
+  const result: PatternHandlerResult = {
+    matched: false,
+    confidence: 1.0,
+    warnings: []
+  };
+
+  // Simple frequency terms
+  const text = doc.text().toLowerCase();
+  
+  // Check for daily pattern
+  if (doc.has('daily') || doc.has('every day') || /each day/i.test(text)) {
+    options.freq = RRule.DAILY;
+    result.matched = true;
+    return result;
   }
   
-  // Similar checks for weekly, monthly, yearly...
+  // Check for weekly pattern
+  if (doc.has('weekly') || doc.has('every week') || /each week/i.test(text)) {
+    options.freq = RRule.WEEKLY;
+    result.matched = true;
+    return result;
+  }
   
-  // Return null if no pattern matched
-  return null;
+  // Similar checks for monthly, yearly patterns...
+  
+  return result;
 }
 ```
 
 ### Pattern Recognition Techniques
 
-Pattern handlers use various techniques to recognize patterns:
+Pattern handlers use CompromiseJS to recognize patterns:
 
-1. **Direct String Matching**: For simple terms like "daily", "weekly"
-2. **Regular Expressions**: For more complex patterns like "every 2 weeks"
-3. **String Manipulation**: For extracting components from matched patterns
-4. **Fuzzy Matching**: For handling slight variations and misspellings
-
-Here's an example of using regular expressions in the interval pattern handler:
-
-```typescript
-apply(input: string): PatternResult | null {
-  // Match patterns like "every 2 weeks"
-  const intervalRegex = /every\s+(\d+)\s+(day|week|month|year)s?/i;
-  const match = input.match(intervalRegex);
-  
-  if (match) {
-    const interval = parseInt(match[1], 10);
-    const unit = match[2].toLowerCase();
-    
-    // Determine frequency based on unit
-    let freq: Frequency;
-    switch (unit) {
-      case 'day': freq = RRule.DAILY; break;
-      case 'week': freq = RRule.WEEKLY; break;
-      case 'month': freq = RRule.MONTHLY; break;
-      case 'year': freq = RRule.YEARLY; break;
-      default: return null; // Shouldn't happen, but just in case
-    }
-    
-    // Create recurrence options
-    const options: RecurrenceOptions = {
-      freq,
-      interval,
-      byweekday: null,
-      bymonthday: null,
-      bymonth: null
-    };
-    
-    // Set the properties that were explicitly defined
-    const setProperties = new Set<keyof RecurrenceOptions>(['freq', 'interval']);
-    
-    // Return the pattern result
-    return {
-      options,
-      metadata: {
-        patternName: this.name,
-        category: this.category,
-        matchedText: input,
-        confidence: 0.9, // High confidence for regex match
-        isPartial: false,
-        setProperties
-      }
-    };
-  }
-  
-  // Return null if no pattern matched
-  return null;
-}
-```
+1. **Text Matching**: Using `doc.has()` to check for specific terms
+2. **Regular Expressions**: Using regex patterns for more complex matching
+3. **NLP Methods**: Using CompromiseJS's natural language processing features
+4. **Text Normalization**: Working with normalized text to handle variations
 
 ## Creating Custom Pattern Handlers
 
@@ -236,157 +146,90 @@ Now that you understand how pattern handlers work, let's create a custom pattern
 
 First, identify the patterns you want to recognize. For this example, let's create a handler for time-of-day patterns like "at 3pm", "at noon", etc.
 
-### Step 2: Create a New Pattern Handler Class
+### Step 2: Create a New Pattern Handler Function
 
 ```typescript
-import { PatternHandler, PatternResult, RecurrenceOptions } from 'helios-js';
 import { RRule } from 'rrule';
-import { PATTERN_CATEGORIES, PATTERN_PRIORITY } from 'helios-js/constants';
+import type { RecurrenceOptions } from '../../types';
+import type { PatternHandlerResult } from '../../processor';
+import type { CompromiseDocument } from '../types';
 
-export const timeOfDayPatternHandler: PatternHandler = {
-  name: 'timeOfDayPattern',
-  category: PATTERN_CATEGORIES.TIME,
-  priority: PATTERN_PRIORITY.TIME,
+/**
+ * Applies time-of-day pattern recognition using CompromiseJS
+ * 
+ * @param doc - CompromiseJS document
+ * @param options - Current recurrence options
+ * @param config - Optional configuration
+ * @returns Pattern handler result
+ */
+export function applyTimeOfDayPatterns(
+  doc: CompromiseDocument,
+  options: RecurrenceOptions,
+  config?: any
+): PatternHandlerResult {
+  const result: PatternHandlerResult = {
+    matched: false,
+    confidence: 1.0,
+    warnings: []
+  };
+
+  // Match patterns like "at 3pm", "at noon"
+  const timeMatches = doc.match('at #Value (am|pm)');
   
-  apply(input: string): PatternResult | null {
-    // Define regex patterns for time expressions
-    const timeRegex = /\bat\s+((\d{1,2})(?::(\d{2}))?\s*(am|pm)|noon|midnight)\b/i;
-    const match = input.match(timeRegex);
+  if (timeMatches.found) {
+    // Extract the time value
+    const timeValue = timeMatches.match('#Value').text();
+    const isPM = timeMatches.has('pm');
     
-    if (!match) {
-      return null; // No match found
-    }
-    
-    let hour = 0;
-    let minute = 0;
-    
-    // Parse the time expression
-    const timeExpr = match[1].toLowerCase();
-    if (timeExpr === 'noon') {
-      hour = 12;
-    } else if (timeExpr === 'midnight') {
+    // Convert to hour value (0-23)
+    let hour = parseInt(timeValue, 10);
+    if (isPM && hour < 12) {
+      hour += 12;
+    } else if (!isPM && hour === 12) {
       hour = 0;
-    } else {
-      hour = parseInt(match[2], 10);
-      if (match[3]) {
-        minute = parseInt(match[3], 10);
-      }
-      
-      // Handle am/pm
-      const period = match[4].toLowerCase();
-      if (period === 'pm' && hour < 12) {
-        hour += 12;
-      } else if (period === 'am' && hour === 12) {
-        hour = 0;
-      }
     }
     
-    // Create recurrence options
-    const options: RecurrenceOptions = {
-      freq: null, // Don't set frequency - this will be combined with other patterns
-      interval: 1,
-      byweekday: null,
-      bymonthday: null,
-      bymonth: null,
-      byhour: [hour],
-      byminute: [minute]
-    };
+    // Update the options
+    options.byhour = [hour];
+    options.byminute = [0];
     
-    // Set the properties that were explicitly defined
-    const setProperties = new Set<keyof RecurrenceOptions>(['byhour', 'byminute']);
+    // Set result as matched
+    result.matched = true;
     
-    // Return the pattern result
-    return {
-      options,
-      metadata: {
-        patternName: this.name,
-        category: this.category,
-        matchedText: match[0],
-        confidence: 0.9,
-        isPartial: true, // This is a partial match that should be combined with others
-        setProperties
-      }
-    };
+    // Add a warning for ambiguous cases
+    if (timeValue === '12' && !isPM) {
+      result.warnings.push('Interpreted "12" as noon (12:00 PM).');
+    }
   }
-};
+  
+  // Check for special times like "noon", "midnight"
+  if (doc.has('noon')) {
+    options.byhour = [12];
+    options.byminute = [0];
+    result.matched = true;
+  } else if (doc.has('midnight')) {
+    options.byhour = [0];
+    options.byminute = [0];
+    result.matched = true;
+  }
+  
+  return result;
+}
 ```
 
-### Step 3: Register the Pattern Handler
+### Step 3: Register the Handler
 
-To use your custom pattern handler, you need to register it with the transformer:
+To use your custom pattern handler, you need to register it with the processor. You can do this by adding it to your application code:
 
 ```typescript
-import { naturalLanguageToRRule, patternHandlers } from 'helios-js';
-import { timeOfDayPatternHandler } from './timeOfDayPattern';
+import { processRecurrencePattern } from 'helios-js';
+import { applyTimeOfDayPatterns } from './patterns/timeOfDay';
 
-// Use custom handler along with built-in handlers
-const options = naturalLanguageToRRule(new Date(), "every monday at 3pm", {
-  handlers: [...patternHandlers, timeOfDayPatternHandler]
+// Use your custom handler
+const options = processRecurrencePattern("every monday at 3pm", {
+  // Force specific handlers to use
+  forceHandlers: ['frequency', 'dayOfWeek', 'timeOfDay']
 });
-```
-
-Or, you can create a custom configuration that includes your handler:
-
-```typescript
-import { createRRule, patternHandlers } from 'helios-js';
-import { timeOfDayPatternHandler } from './timeOfDayPattern';
-
-// Create a custom configuration
-const config = {
-  handlers: [...patternHandlers, timeOfDayPatternHandler]
-};
-
-// Use the custom configuration
-const rule = createRRule(new Date(), "every monday at 3pm", config);
-```
-
-## Advanced Pattern Handler Techniques
-
-### Confidence Scoring
-
-Confidence scoring helps the system evaluate how certain it is about a pattern match. Use these guidelines:
-
-- **1.0**: Perfect, unambiguous match (e.g., "daily" exactly matches a frequency pattern)
-- **0.9**: Strong match with minor parsing involved (e.g., "every 2 weeks" requires number parsing)
-- **0.8**: Good match with more complex parsing (e.g., "every monday and friday" requires day parsing)
-- **0.7**: Reasonable match with some uncertainty (e.g., "biweekly" which could mean twice per week or every two weeks)
-- **0.6 and below**: Matches with significant uncertainty or ambiguity
-
-Example of confidence scoring:
-
-```typescript
-// Direct match: highest confidence
-if (input === 'daily') {
-  return createResult(RRule.DAILY, 1.0);
-}
-
-// Pattern match: high confidence
-const match = input.match(/every\s+(\d+)\s+weeks?/i);
-if (match) {
-  const interval = parseInt(match[1], 10);
-  return createResult(RRule.WEEKLY, interval, 0.9);
-}
-
-// Ambiguous match: lower confidence
-if (input.includes('biweekly')) {
-  // Assume every 2 weeks, but flag as less certain
-  return createResult(RRule.WEEKLY, 2, 0.7, ['Ambiguous term "biweekly" interpreted as "every 2 weeks"']);
-}
-```
-
-### Handling Partial Matches
-
-Many patterns are meant to be combined with others. Mark these as partial matches:
-
-```typescript
-return {
-  options,
-  metadata: {
-    // ...other metadata
-    isPartial: true, // This pattern should be combined with others
-    setProperties: new Set(['byhour', 'byminute'])
-  }
-};
 ```
 
 ### Warning Generation
@@ -394,65 +237,32 @@ return {
 Include warnings when a pattern is ambiguous or might be misinterpreted:
 
 ```typescript
-apply(input: string): PatternResult | null {
-  // ...pattern matching logic
+if (doc.has('biweekly')) {
+  // Update options appropriately
+  options.freq = RRule.WEEKLY;
+  options.interval = 2;
   
-  // Create warnings array for ambiguous patterns
-  const warnings: string[] = [];
+  // Flag as matched
+  result.matched = true;
   
-  if (input.includes('biweekly')) {
-    warnings.push('The term "biweekly" is ambiguous and has been interpreted as "every 2 weeks".');
-  }
-  
-  // Return result with warnings
-  return {
-    options,
-    metadata: {
-      // ...other metadata
-      warnings
-    }
-  };
+  // Add warning for ambiguous term
+  result.warnings.push('The term "biweekly" is ambiguous and has been interpreted as "every 2 weeks".');
 }
-```
-
-### Property Tracking
-
-Track which properties are set by your pattern handler to help with pattern combination:
-
-```typescript
-const options: RecurrenceOptions = {
-  freq: RRule.WEEKLY,
-  interval: 2,
-  byweekday: [RRule.MO, RRule.FR],
-  bymonthday: null,
-  bymonth: null
-};
-
-// Track the properties that were explicitly set
-const setProperties = new Set<keyof RecurrenceOptions>([
-  'freq', 
-  'interval', 
-  'byweekday'
-]);
 ```
 
 ## Pattern Handler Best Practices
 
 1. **Focus on One Pattern Category**: Each handler should focus on a specific pattern type.
 
-2. **Prioritize Correctly**: Set the appropriate priority for your handler based on its pattern type.
+2. **Use CompromiseJS Effectively**: Leverage the full power of CompromiseJS for pattern matching.
 
-3. **Normalize Input**: Always assume the input has been normalized.
+3. **Normalize Input**: Remember that input has already been normalized.
 
-4. **Use Regular Expressions Carefully**: Make regex patterns precise but not overly strict.
+4. **Set Clear Confidence Levels**: Use confidence levels to indicate how certain the match is.
 
-5. **Handle Edge Cases**: Consider plural forms, variations, and potential ambiguities.
+5. **Provide Useful Warnings**: Include warnings for ambiguous or potentially incorrect interpretations.
 
-6. **Provide Good Metadata**: Include confidence scores, clear names, and useful warnings.
-
-7. **Track Properties**: Always track which properties your handler sets.
-
-8. **Document Patterns**: Document the patterns your handler recognizes.
+6. **Document Patterns**: Document the patterns your handler recognizes.
 
 ## Debugging Pattern Handlers
 
@@ -460,12 +270,22 @@ When developing or troubleshooting pattern handlers, these techniques can help:
 
 ### 1. Test Individual Handlers
 
-Test your handler directly to see if it recognizes a pattern:
+Test your handler directly with a CompromiseJS document:
 
 ```typescript
+import { setupCompromise, getDocument } from 'helios-js/compromise';
+import { applyTimeOfDayPatterns } from './patterns/timeOfDay';
+
+// Setup CompromiseJS
+setupCompromise();
+
+// Create a document
+const doc = getDocument("at 3pm");
+
 // Test a specific handler
-const result = yourPatternHandler.apply("pattern to test");
-console.log(result);
+const options = {};
+const result = applyTimeOfDayPatterns(doc, options);
+console.log(result, options);
 ```
 
 ### 2. Log Normalized Input
@@ -479,33 +299,31 @@ const normalized = normalizeInput("Your pattern here");
 console.log("Normalized:", normalized);
 ```
 
-### 3. Use Debug Configuration
+### 3. Use Forced Handlers
 
-Create a configuration that logs the transformation process:
+Test specific handlers in isolation:
 
 ```typescript
-const config = {
-  config: {
-    debug: {
-      enabled: true,
-      logLevel: 'debug',
-      detailedResults: true
-    }
-  }
-};
+import { processRecurrencePattern } from 'helios-js';
 
-const options = naturalLanguageToRRule(new Date(), "pattern to test", config);
+const options = processRecurrencePattern("every monday at 3pm", {
+  forceHandlers: ['timeOfDay'] // Only use the time-of-day handler
+});
+console.log(options);
 ```
 
-### 4. Check Pattern Result
+### 4. Check Handler Result
 
-Examine the pattern result to understand what was recognized:
+Examine the result to understand what was recognized:
 
 ```typescript
-const options = naturalLanguageToRRule(new Date(), "pattern to test");
-console.log("Matched patterns:", options.matchedPatterns);
-console.log("Confidence:", options.confidence);
-console.log("Warnings:", options.warnings);
+const options = {};
+const result = applyTimeOfDayPatterns(doc, options);
+
+console.log("Matched:", result.matched);
+console.log("Confidence:", result.confidence);
+console.log("Warnings:", result.warnings);
+console.log("Updated options:", options);
 ```
 
 ## Example: Month Name Pattern Handler
@@ -513,70 +331,56 @@ console.log("Warnings:", options.warnings);
 Here's a complete example of a custom pattern handler that recognizes month names like "in January", "during February", etc.:
 
 ```typescript
-import { PatternHandler, PatternResult, RecurrenceOptions } from 'helios-js';
 import { RRule } from 'rrule';
-import { PATTERN_CATEGORIES, PATTERN_PRIORITY, MONTHS } from 'helios-js/constants';
+import type { RecurrenceOptions } from '../../types';
+import type { PatternHandlerResult } from '../../processor';
+import type { CompromiseDocument } from '../types';
+import { MONTHS } from '../../constants';
 
-export const monthNamePatternHandler: PatternHandler = {
-  name: 'monthNamePattern',
-  category: PATTERN_CATEGORIES.MONTH,
-  priority: PATTERN_PRIORITY.MONTH,
+/**
+ * Applies month name pattern recognition using CompromiseJS
+ * 
+ * @param doc - CompromiseJS document
+ * @param options - Current recurrence options
+ * @param config - Optional configuration
+ * @returns Pattern handler result
+ */
+export function applyMonthNamePatterns(
+  doc: CompromiseDocument,
+  options: RecurrenceOptions,
+  config?: any
+): PatternHandlerResult {
+  const result: PatternHandlerResult = {
+    matched: false,
+    confidence: 1.0,
+    warnings: []
+  };
+
+  // Match patterns like "in January", "during February"
+  const monthMatches = doc.match('(in|during) (january|february|march|april|may|june|july|august|september|october|november|december)');
   
-  apply(input: string): PatternResult | null {
-    // Define regex for month name patterns
-    const monthRegex = /\b(in|during)\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/i;
-    const match = input.match(monthRegex);
-    
-    if (!match) {
-      return null; // No match found
-    }
-    
-    // Get the month name from the match
-    const monthName = match[2].toLowerCase();
+  if (monthMatches.found) {
+    // Extract the month name
+    const monthName = monthMatches.match('(january|february|march|april|may|june|july|august|september|october|november|december)').text().toLowerCase();
     
     // Map month name to month number (1-12)
-    let monthNumber = 0;
-    const monthEntries = Object.entries(MONTHS);
-    for (const [key, value] of monthEntries) {
-      if (value === monthName) {
-        // Extract month number from month entries
-        // MONTHS.JANUARY -> 1, MONTHS.FEBRUARY -> 2, etc.
-        monthNumber = monthEntries.findIndex(([k, v]) => k === key) % 12 + 1;
-        break;
-      }
-    }
-    
-    // If monthNumber is still 0, no valid month was found
-    if (monthNumber === 0) {
-      return null;
-    }
-    
-    // Create recurrence options
-    const options: RecurrenceOptions = {
-      freq: null, // Don't set frequency - this will be combined with other patterns
-      interval: 1,
-      byweekday: null,
-      bymonthday: null,
-      bymonth: [monthNumber]
+    const monthNumbers = {
+      'january': 1, 'february': 2, 'march': 3, 'april': 4,
+      'may': 5, 'june': 6, 'july': 7, 'august': 8,
+      'september': 9, 'october': 10, 'november': 11, 'december': 12
     };
     
-    // Set the properties that were explicitly defined
-    const setProperties = new Set<keyof RecurrenceOptions>(['bymonth']);
+    const monthNumber = monthNumbers[monthName];
     
-    // Return the pattern result
-    return {
-      options,
-      metadata: {
-        patternName: this.name,
-        category: this.category,
-        matchedText: match[0],
-        confidence: 0.9,
-        isPartial: true, // This is a partial match that should be combined with others
-        setProperties
-      }
-    };
+    // Update the options
+    if (monthNumber) {
+      options.bymonth = [monthNumber];
+      result.matched = true;
+    }
   }
-};
+  
+  return result;
+}
 ```
 
 ## Conclusion
